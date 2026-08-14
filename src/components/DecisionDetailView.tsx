@@ -71,7 +71,7 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
       {/* Back Button */}
       <button
         onClick={onBack}
-        className="flex items-center space-x-2 text-[14px] font-semibold text-zinc-400 hover:text-white transition"
+        className="flex items-center space-x-2 text-[14px] font-semibold text-zinc-400 hover:text-[#5991F1] transition cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4" />
         <span>Back to Decision Library</span>
@@ -165,7 +165,7 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
                     </div>
 
                     {matchedSource && (
-                      <span className="inline-flex items-center space-x-1 text-[12px] font-semibold text-zinc-300 bg-[#0D1116] border border-[#21262d] px-2 py-0.5 rounded-full group-hover:bg-white group-hover:text-black transition-colors">
+                      <span className="inline-flex items-center space-x-1 text-[12px] font-semibold text-[#5991F1] bg-[#0D1116] border border-[#21262d] px-2 py-0.5 rounded-full group-hover:bg-[#5991F1] group-hover:text-black transition-colors">
                         <span>Inspect Evidence</span>
                         <ExternalLink className="w-3 h-3" />
                       </span>

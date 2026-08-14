@@ -95,7 +95,7 @@ export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
             <p className="text-zinc-400 text-[14px]">No decisions found matching your filter criteria.</p>
             <button
               onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }}
-              className="text-[12px] font-bold text-white hover:underline"
+              className="text-[12px] font-bold text-[#5991F1] hover:underline cursor-pointer"
             >
               Clear filters
             </button>
@@ -142,7 +142,7 @@ export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
                       e.stopPropagation();
                       onSelectDecision(dec.id);
                     }}
-                    className="flex items-center space-x-1 text-zinc-300 font-bold group-hover:text-white group-hover:translate-x-0.5 transition text-[12px]"
+                    className="flex items-center space-x-1 text-[#5991F1] font-bold hover:text-[#8bb6ff] group-hover:translate-x-0.5 transition text-[12px] cursor-pointer"
                   >
                     <span>View decision</span>
                     <ArrowRight className="w-3.5 h-3.5" />

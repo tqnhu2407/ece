@@ -82,7 +82,7 @@ export const SourceDetailModal: React.FC<SourceDetailModalProps> = ({
             href={source.url || '#'}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center space-x-1.5 text-[12px] font-bold text-zinc-300 hover:text-white transition"
+            className="inline-flex items-center space-x-1.5 text-[12px] font-bold text-[#5991F1] hover:text-[#8bb6ff] transition"
           >
             <span>Open in {getSourceBadgeText(source.type)}</span>
             <ExternalLink className="w-3.5 h-3.5" />
