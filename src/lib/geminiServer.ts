@@ -49,7 +49,7 @@ Your core mission is to reconstruct the underlying reasoning behind engineering 
 User Question: "${question}"
 
 Analyze the provided engineering context (Calendar meetings, Docs review notes/ADRs, GitHub PRs, Incident reports).
-Synthesize a direct concise AI answer, step-by-step reasoning timeline, evidence sources used, and a confidence level (High, Medium, or Low) with rationale.
+Synthesize a direct concise AI answer, step-by-step reasoning timeline, evidence sources used, and a Evidence Strength (High, Medium, or Low) with rationale.
 
 Context:
 ${contextString}
@@ -199,7 +199,7 @@ function fallbackReasoningEngine(
         type: 'review'
       },
       {
-        date: 'Jun 18, 2026',
+        date: 'May 23, 2026',
         title: 'Gemini Strategy Sync',
         description: 'Standardized AI capabilities across internal services.',
         type: 'decision'

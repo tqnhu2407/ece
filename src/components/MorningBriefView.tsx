@@ -94,7 +94,6 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
               </h2>
             </div>
           </div>
-          <span className="text-xs text-indigo-300/80 font-mono hidden md:inline-block">Reconstruct Context & Decisions</span>
         </div>
 
         {/* Input Bar */}
@@ -128,7 +127,6 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
 
         {/* Suggested Prompt Chips */}
         <div className="mt-3.5 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-slate-400 font-medium">Try asking:</span>
           {brief.suggestedQuestions.map((q, idx) => (
             <button
               key={idx}
@@ -176,12 +174,17 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
           className="lg:col-span-5 bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm flex flex-col justify-between space-y-3"
         >
           <div>
-            <div className="flex items-center justify-between pb-3 mb-1 border-b border-slate-100">
-              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
-                <Layers className="w-4 h-4 text-indigo-600" />
-                <span>What Changed</span>
-              </h2>
-              <span className="text-[11px] text-slate-500 font-medium">
+            <div className="flex items-start justify-between pb-3 mb-1 border-b border-slate-100">
+              <div>
+                <h2 className="text-xs font-bold text-slate-900 tracking-wider flex items-center space-x-2">
+                  <Layers className="w-4 h-4 text-indigo-600" />
+                  <span>What Changed</span>
+                </h2>
+                <p className="text-[11px] text-slate-500 font-normal mt-0.5">
+                  The decisions and changes you may have missed.
+                </p>
+              </div>
+              <span className="text-[11px] text-slate-500 font-medium shrink-0 pt-0.5">
                 {brief.changes.length} updates
               </span>
             </div>

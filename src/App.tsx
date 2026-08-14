@@ -4,14 +4,13 @@ import { MorningBriefView } from './components/MorningBriefView';
 import { AskWhyResultView } from './components/AskWhyResultView';
 import { DecisionLibraryView } from './components/DecisionLibraryView';
 import { DecisionDetailView } from './components/DecisionDetailView';
-import { ContextSourcesView } from './components/ContextSourcesView';
 import { AddContextModal } from './components/AddContextModal';
 import { SourceDetailModal } from './components/SourceDetailModal';
 import { ContextSource, DecisionItem, MorningBriefData, ReasoningResult } from './types';
 import { INITIAL_MORNING_BRIEF } from './data/mockData';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'brief' | 'library' | 'sources'>('brief');
+  const [activeTab, setActiveTab] = useState<'brief' | 'library'>('brief');
   const [currentView, setCurrentView] = useState<'brief' | 'ask-why-result' | 'decision-detail'>('brief');
 
   const [brief, setBrief] = useState<MorningBriefData>(INITIAL_MORNING_BRIEF);
@@ -135,14 +134,6 @@ export default function App() {
             onSourceClick={(source) => setInspectSource(source)}
           />
         )}
-
-        {activeTab === 'sources' && (
-          <ContextSourcesView
-            sources={contextSources}
-            onOpenAddContext={() => setIsAddContextOpen(true)}
-            onSourceClick={(source) => setInspectSource(source)}
-          />
-        )}
       </main>
 
       {/* Modals */}
@@ -161,7 +152,7 @@ export default function App() {
       <footer className="border-t border-slate-200/80 bg-white/50 backdrop-blur-sm py-6">
         <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-1">
           <p className="font-semibold text-slate-700">Engineering Context Engine (ECE)</p>
-          <p>Maintain Shared Understanding · Prevent Context Decay</p>
+          <p>Preserve engineering context · Maintain shared understanding · Prevent context decay</p>
         </div>
       </footer>
     </div>

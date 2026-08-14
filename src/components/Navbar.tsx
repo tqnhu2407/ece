@@ -1,9 +1,9 @@
 import React from 'react';
-import { BrainCircuit, BookOpen, Layers, Plus, Sparkles } from 'lucide-react';
+import { BrainCircuit, BookOpen, Plus, Sparkles } from 'lucide-react';
 
 interface NavbarProps {
-  activeTab: 'brief' | 'library' | 'sources';
-  setActiveTab: (tab: 'brief' | 'library' | 'sources') => void;
+  activeTab: 'brief' | 'library';
+  setActiveTab: (tab: 'brief' | 'library') => void;
   onOpenAddContext: () => void;
   userName: string;
 }
@@ -68,19 +68,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <BookOpen className="w-3.5 h-3.5" />
               <span>Decision Library</span>
             </button>
-
-            <button
-              id="nav-sources-tab"
-              onClick={() => setActiveTab('sources')}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
-                activeTab === 'sources'
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Context Memory</span>
-            </button>
           </nav>
 
           {/* Right Actions & User Profile */}
@@ -92,7 +79,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Add a meeting note, RFC, or incident report into team context"
             >
               <Plus className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Sync Context</span>
+              <span>Connect Sources</span>
             </button>
 
             {/* User Avatar */}

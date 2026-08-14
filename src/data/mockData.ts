@@ -45,17 +45,17 @@ export const INITIAL_CONTEXT_SOURCES: ContextSource[] = [
     id: 'cal-02',
     type: 'calendar',
     title: 'AI Pipeline Sync: Reducing False Positives in Highlight Extraction',
-    date: 'Jun 02, 2026',
+    date: 'May 21, 2026',
     authorOrHost: 'Sarah L. (AI Lead)',
     summary: 'Review of AI Highlight Pipeline accuracy metrics. Precision dropped to 72% due to noisy log parsing.',
     details: 'Decided to introduce asynchronous pre-filtering stage using Gemini 3.6 Flash structured schema outputs before vector ranking.',
-    url: 'https://calendar.google.com/event?id=ai-sync-jun02'
+    url: 'https://calendar.google.com/event?id=ai-sync-may21'
   },
   {
     id: 'doc-03',
     type: 'doc',
     title: 'Highlight Pipeline Architecture Decision Record (ADR-014)',
-    date: 'Jun 03, 2026',
+    date: 'May 22, 2026',
     authorOrHost: 'Sarah L.',
     summary: 'Documented decision to update highlight extraction pipeline to asynchronous batch mode with Gemini filter.',
     details: 'Reduced false positive highlights from 28% to 4.2% while decreasing API compute expenditure by 35%.',
@@ -65,7 +65,7 @@ export const INITIAL_CONTEXT_SOURCES: ContextSource[] = [
     id: 'github-02',
     type: 'github',
     title: 'PR #310: Implement Gemini-based Async Pre-filter for Highlights',
-    date: 'Jun 05, 2026',
+    date: 'May 24, 2026',
     authorOrHost: 'sarah-ai',
     summary: 'Added AsyncWorker queue and updated model strategy to Gemini 3.6 Flash for batch extraction.',
     details: 'Merged into main branch. Included regression benchmarks.',
@@ -75,7 +75,7 @@ export const INITIAL_CONTEXT_SOURCES: ContextSource[] = [
     id: 'doc-04',
     type: 'doc',
     title: 'RFC: Migrating Internal Microservices to gRPC',
-    date: 'Jun 12, 2026',
+    date: 'May 24, 2026',
     authorOrHost: 'Alex Rivers',
     summary: 'Proposal to replace HTTP REST with gRPC for service-to-service communication to reduce serialization overhead.',
     details: 'Protobuf definitions will enforce strict contracts across services. Benchmark shows 4x payload throughput improvement.',
@@ -85,17 +85,17 @@ export const INITIAL_CONTEXT_SOURCES: ContextSource[] = [
     id: 'cal-03',
     type: 'calendar',
     title: 'Gemini Model Strategy & Upgrade Workshop',
-    date: 'Jun 18, 2026',
+    date: 'May 23, 2026',
     authorOrHost: 'Nhu T.',
     summary: 'Evaluated Gemini 3.6 Flash vs older models for classification tasks across engineering sub-modules.',
     details: 'Consensus: Standardize on Gemini 3.6 Flash for low latency and high structured output reliability.',
-    url: 'https://calendar.google.com/event?id=gemini-strategy-jun18'
+    url: 'https://calendar.google.com/event?id=gemini-strategy-may23'
   },
   {
     id: 'github-03',
     type: 'github',
     title: 'PR #402: Migrate classification service to @google/genai SDK',
-    date: 'Jun 20, 2026',
+    date: 'May 25, 2026',
     authorOrHost: 'nhu-t',
     summary: 'Updated SDK imports and configured server-side Gemini 3.6 Flash with responseSchema.',
     details: 'Merged with zero breaking changes.',
@@ -162,35 +162,35 @@ export const INITIAL_DECISIONS: DecisionItem[] = [
     id: 'dec-02',
     title: 'Update Highlight Pipeline Strategy with AI Pre-filter',
     category: 'Data Pipeline',
-    date: 'Jun 03, 2026',
+    date: 'May 22, 2026',
     author: 'Sarah L.',
     status: 'Implemented',
     summary: 'Introduced an asynchronous batch processing pipeline using Gemini 3.6 Flash structured schema outputs to filter noisy log highlights.',
     why: 'The previous rule-based highlight extractor suffered a high false-positive rate (28%). The new AI pre-filter increased precision to 95.8% while reducing overall cloud compute overhead.',
     timeline: [
       {
-        date: 'Jun 01, 2026',
+        date: 'May 20, 2026',
         title: 'Quality Alert',
         description: 'User feedback indicated false positive highlights polluted 28% of daily summary feeds.',
         type: 'incident',
         sourceId: 'cal-02'
       },
       {
-        date: 'Jun 02, 2026',
+        date: 'May 21, 2026',
         title: 'AI Pipeline Sync',
         description: 'AI team benchmarked rule-based vs LLM structured classification.',
         type: 'review',
         sourceId: 'cal-02'
       },
       {
-        date: 'Jun 03, 2026',
+        date: 'May 22, 2026',
         title: 'ADR Documented',
         description: 'ADR-014 published approving Gemini batch pre-filtering strategy.',
         type: 'decision',
         sourceId: 'doc-03'
       },
       {
-        date: 'Jun 05, 2026',
+        date: 'May 24, 2026',
         title: 'Implementation',
         description: 'PR #310 deployed with background queue processor.',
         type: 'implementation',
@@ -208,28 +208,28 @@ export const INITIAL_DECISIONS: DecisionItem[] = [
     id: 'dec-03',
     title: 'Standardize on Gemini 3.6 Flash for Classification',
     category: 'AI / ML',
-    date: 'Jun 18, 2026',
+    date: 'May 23, 2026',
     author: 'Nhu T.',
     status: 'Implemented',
     summary: 'Standardized all automated engineering document and log classification services on Gemini 3.6 Flash via the official @google/genai server-side SDK.',
     why: 'Gemini 3.6 Flash provides optimal balance of sub-second reasoning latency, reliable JSON response schema enforcement, and cost efficiency across high-volume internal context pipelines.',
     timeline: [
       {
-        date: 'Jun 15, 2026',
+        date: 'May 21, 2026',
         title: 'SDK Audit',
         description: 'Audit revealed legacy client-side SDK usage in 2 services, causing credential fragmentation.',
         type: 'investigation',
         sourceId: 'cal-03'
       },
       {
-        date: 'Jun 18, 2026',
+        date: 'May 23, 2026',
         title: 'Workshop Decision',
         description: 'Agreed to enforce server-side @google/genai standard with Gemini 3.6 Flash across all internal services.',
         type: 'decision',
         sourceId: 'cal-03'
       },
       {
-        date: 'Jun 20, 2026',
+        date: 'May 25, 2026',
         title: 'Implementation',
         description: 'PR #402 refactored core classification endpoints to Express server proxies with Gemini 3.6 Flash.',
         type: 'implementation',
@@ -246,21 +246,21 @@ export const INITIAL_DECISIONS: DecisionItem[] = [
     id: 'dec-04',
     title: 'Migrate Core Service-to-Service API to gRPC',
     category: 'API',
-    date: 'Jun 12, 2026',
+    date: 'May 24, 2026',
     author: 'Alex Rivers',
     status: 'Awaiting Implementation',
     summary: 'Transitioning high-volume microservice APIs from HTTP/JSON REST to gRPC with Protocol Buffers.',
     why: 'JSON parsing overhead accounted for 22% of internal service CPU usage. Protobuf binary serialization will improve throughput by 4x and enforce strict cross-team API schemas.',
     timeline: [
       {
-        date: 'Jun 10, 2026',
+        date: 'May 21, 2026',
         title: 'Profiling Report',
         description: 'CPU flamegraphs showed high JSON marshalling cost in inter-service gateway nodes.',
         type: 'investigation',
         sourceId: 'doc-04'
       },
       {
-        date: 'Jun 12, 2026',
+        date: 'May 24, 2026',
         title: 'RFC Published',
         description: 'RFC for gRPC migration published and approved by lead architects.',
         type: 'decision',
@@ -279,7 +279,7 @@ export const INITIAL_MORNING_BRIEF: MorningBriefData = {
     name: 'Nhu',
     team: 'Platform & Infrastructure Team'
   },
-  period: 'Week of May 24 – Jun 20, 2026',
+  period: 'This week · May 20-25, 2026',
   stats: {
     importantDecisions: 3,
     architectureChanges: 2,

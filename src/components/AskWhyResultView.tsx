@@ -113,9 +113,9 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
 
       {/* Question Header */}
       <div className="bg-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl border border-slate-800 space-y-4">
-        <div className="flex items-center space-x-2 text-indigo-400 text-xs font-mono uppercase tracking-wider">
+        <div className="flex items-center space-x-2 text-indigo-400 text-xs font-mono tracking-wider">
           <Sparkles className="w-4 h-4" />
-          <span>Ask Why · Reconstructed Reasoning</span>
+          <span>Ask Why · Reconstructed Context</span>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
@@ -130,7 +130,7 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
         {/* Confidence Indicator */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800 text-xs">
           <div className="flex items-center space-x-2">
-            <span className="text-slate-400 font-medium">Confidence Level:</span>
+            <span className="text-slate-400 font-medium">Evidence Strength:</span>
             <span
               className={`px-2.5 py-1 rounded-full font-bold flex items-center space-x-1.5 ${
                 result.confidence === 'High'
@@ -157,7 +157,7 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
         <div>
           <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
             <Clock className="w-5 h-5 text-indigo-600" />
-            <span>Reasoning Timeline</span>
+            <span>Decision Timeline</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
             Reconstructed chronological sequence of events, reviews, and implementations leading to this decision.

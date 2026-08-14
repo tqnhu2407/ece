@@ -149,7 +149,7 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
       <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
         <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
           <FileText className="w-5 h-5 text-indigo-600" />
-          <span>Evidence Sources</span>
+          <span>Supporting Evidence</span>
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
