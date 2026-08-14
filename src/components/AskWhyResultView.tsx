@@ -152,7 +152,7 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
         </div>
       </div>
 
-      {/* Reasoning Timeline Section */}
+      {/* Reasoning Timeline Section with Integrated Evidence */}
       <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
         <div>
           <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
@@ -160,76 +160,73 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
             <span>Decision Timeline</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Reconstructed chronological sequence of events, reviews, and implementations leading to this decision.
+            Reconstructed chronological sequence of events, reviews, and implementations. Click any item in the timeline to inspect its underlying evidence source.
           </p>
         </div>
 
         {/* Vertical Timeline Steps */}
-        <div className="relative pl-6 space-y-8 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-indigo-100">
-          {result.reasoningTimeline.map((step, idx) => (
-            <div key={idx} className="relative group">
-              {/* Timeline Node Dot */}
-              <div className="absolute -left-6 top-1 w-6 h-6 rounded-full bg-indigo-600 border-4 border-white shadow flex items-center justify-center text-white text-[10px] font-bold">
-                {idx + 1}
-              </div>
+        <div className="relative pl-6 space-y-6 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-indigo-100">
+          {result.reasoningTimeline.map((step, idx) => {
+            const matchedSource = result.evidence.find(s => s.id === step.sourceId) || result.evidence[idx] || null;
 
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 hover:border-indigo-200 hover:bg-slate-50/90 transition space-y-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-semibold text-slate-500 font-mono">{step.date}</span>
-                    {getStepTypeBadge(step.type)}
+            return (
+              <div key={idx} className="relative group">
+                {/* Timeline Node Dot */}
+                <div className="absolute -left-6 top-1 w-6 h-6 rounded-full bg-indigo-600 border-4 border-white shadow flex items-center justify-center text-white text-[10px] font-bold group-hover:scale-110 transition-transform">
+                  {idx + 1}
+                </div>
+
+                <div 
+                  onClick={() => matchedSource && onSourceClick(matchedSource)}
+                  className={`bg-slate-50 rounded-xl p-4 sm:p-5 border transition-all ${
+                    matchedSource 
+                      ? 'cursor-pointer border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/25 hover:shadow-md' 
+                      : 'border-slate-100'
+                  } space-y-2.5`}
+                  title={matchedSource ? `Click to inspect: ${matchedSource.title}` : undefined}
+                >
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs font-semibold text-slate-500 font-mono">{step.date}</span>
+                      {getStepTypeBadge(step.type)}
+                    </div>
+
+                    {matchedSource && (
+                      <span className="inline-flex items-center space-x-1 text-[11px] font-semibold text-indigo-600 bg-white border border-indigo-100 px-2 py-0.5 rounded-full shadow-2xs group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <span>Inspect Evidence</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </span>
+                    )}
                   </div>
+
+                  <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-900 transition-colors">
+                    {step.title}
+                  </h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    {step.description}
+                  </p>
+
+                  {/* Integrated Evidence Source Badge */}
+                  {matchedSource && (
+                    <div className="pt-2.5 mt-1 border-t border-slate-200/70 flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <span className="flex items-center space-x-1.5 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold shrink-0 shadow-2xs">
+                          {getSourceIcon(matchedSource.type)}
+                          <span className="text-[11px]">{getSourceBadgeText(matchedSource.type)}</span>
+                        </span>
+                        <span className="text-slate-600 font-medium truncate text-xs group-hover:text-indigo-700 transition-colors">
+                          {matchedSource.title}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-400 font-mono shrink-0 hidden sm:inline-block">
+                        {matchedSource.date}
+                      </span>
+                    </div>
+                  )}
                 </div>
-
-                <h3 className="text-base font-bold text-slate-900">{step.title}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{step.description}</p>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Evidence Sources Section */}
-      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
-        <div>
-          <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
-            <FileText className="w-5 h-5 text-indigo-600" />
-            <span>Evidence & Context Sources</span>
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Underlying Google Calendar syncs, Google Docs notes, and GitHub PRs utilized by AI to reconstruct reasoning.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {result.evidence.map((source) => (
-            <div
-              key={source.id}
-              onClick={() => onSourceClick(source)}
-              className="bg-slate-50 hover:bg-indigo-50/50 rounded-xl p-4 border border-slate-200 hover:border-indigo-300 transition cursor-pointer space-y-2 group"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  {getSourceIcon(source.type)}
-                  <span className="text-xs font-semibold text-slate-700">{getSourceBadgeText(source.type)}</span>
-                </div>
-                <span className="text-[11px] font-mono text-slate-400">{source.date}</span>
-              </div>
-
-              <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
-                {source.title}
-              </h4>
-
-              <p className="text-xs text-slate-600 line-clamp-2">
-                {source.summary}
-              </p>
-
-              <div className="flex items-center justify-between pt-2 text-[11px] text-indigo-600 font-semibold">
-                <span>{source.authorOrHost ? `By ${source.authorOrHost}` : 'View Source Details'}</span>
-                <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

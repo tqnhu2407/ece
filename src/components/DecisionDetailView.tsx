@@ -8,8 +8,6 @@ import {
   GitPullRequest, 
   AlertTriangle, 
   Clock, 
-  User, 
-  CheckCircle2, 
   ExternalLink,
   Sparkles,
   ArrowRight
@@ -44,6 +42,23 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
       case 'doc': return 'Google Docs';
       case 'github': return 'GitHub';
       case 'incident': return 'Incident Report';
+    }
+  };
+
+  const getStepTypeBadge = (type: string) => {
+    switch (type) {
+      case 'incident':
+        return <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 rounded">Incident</span>;
+      case 'investigation':
+        return <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 rounded">Investigation</span>;
+      case 'review':
+        return <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800 rounded">Review</span>;
+      case 'decision':
+        return <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 rounded">Decision</span>;
+      case 'implementation':
+        return <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 rounded">Implementation</span>;
+      default:
+        return <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-800 rounded">{type}</span>;
     }
   };
 
@@ -114,7 +129,7 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
         </p>
       </div>
 
-      {/* Context Timeline */}
+      {/* Context Timeline with Integrated Evidence */}
       <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
         <div>
           <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
@@ -122,57 +137,71 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
             <span>Context Timeline</span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Historical progression of events, reviews, and implementations.
+            Historical progression of events, reviews, and implementations. Click any item in the timeline to inspect its underlying evidence.
           </p>
         </div>
 
         <div className="relative pl-6 space-y-6 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-indigo-100">
-          {decision.timeline.map((step, idx) => (
-            <div key={idx} className="relative group">
-              <div className="absolute -left-6 top-1 w-6 h-6 rounded-full bg-indigo-600 border-4 border-white shadow flex items-center justify-center text-white text-[10px] font-bold">
-                {idx + 1}
-              </div>
+          {decision.timeline.map((step, idx) => {
+            const matchedSource = decision.evidence.find(s => s.id === step.sourceId) || decision.evidence[idx] || null;
 
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-1">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs font-mono font-semibold text-slate-500">{step.date}</span>
-                  <span className="text-xs font-bold text-indigo-700 uppercase">{step.title}</span>
+            return (
+              <div key={idx} className="relative group">
+                <div className="absolute -left-6 top-1 w-6 h-6 rounded-full bg-indigo-600 border-4 border-white shadow flex items-center justify-center text-white text-[10px] font-bold group-hover:scale-110 transition-transform">
+                  {idx + 1}
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">{step.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Evidence */}
-      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
-        <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
-          <FileText className="w-5 h-5 text-indigo-600" />
-          <span>Supporting Evidence</span>
-        </h2>
+                <div 
+                  onClick={() => matchedSource && onSourceClick(matchedSource)}
+                  className={`bg-slate-50 rounded-xl p-4 sm:p-5 border transition-all ${
+                    matchedSource 
+                      ? 'cursor-pointer border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/25 hover:shadow-md' 
+                      : 'border-slate-100'
+                  } space-y-2.5`}
+                  title={matchedSource ? `Click to inspect: ${matchedSource.title}` : undefined}
+                >
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs font-mono font-semibold text-slate-500">{step.date}</span>
+                      {getStepTypeBadge(step.type)}
+                    </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {decision.evidence.map((source) => (
-            <div
-              key={source.id}
-              onClick={() => onSourceClick(source)}
-              className="p-3.5 bg-slate-50 hover:bg-indigo-50/50 rounded-xl border border-slate-200 hover:border-indigo-300 transition cursor-pointer flex items-center justify-between group"
-            >
-              <div className="flex items-center space-x-3">
-                {getSourceIcon(source.type)}
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                    {getSourceBadgeText(source.type)}
-                  </span>
-                  <span className="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-1">
-                    {source.title}
-                  </span>
+                    {matchedSource && (
+                      <span className="inline-flex items-center space-x-1 text-[11px] font-semibold text-indigo-600 bg-white border border-indigo-100 px-2 py-0.5 rounded-full shadow-2xs group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <span>Inspect Evidence</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-indigo-900 transition-colors">
+                    {step.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    {step.description}
+                  </p>
+
+                  {/* Integrated Evidence Source Badge */}
+                  {matchedSource && (
+                    <div className="pt-2.5 mt-1 border-t border-slate-200/70 flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <span className="flex items-center space-x-1.5 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold shrink-0 shadow-2xs">
+                          {getSourceIcon(matchedSource.type)}
+                          <span className="text-[11px]">{getSourceBadgeText(matchedSource.type)}</span>
+                        </span>
+                        <span className="text-slate-600 font-medium truncate text-xs group-hover:text-indigo-700 transition-colors">
+                          {matchedSource.title}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-400 font-mono shrink-0 hidden sm:inline-block">
+                        {matchedSource.date}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
-              <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 transition" />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

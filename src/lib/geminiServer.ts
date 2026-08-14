@@ -190,19 +190,22 @@ function fallbackReasoningEngine(
         date: 'May 20, 2026',
         title: 'Production Incident #42',
         description: 'Initiated payment service performance investigation.',
-        type: 'incident'
+        type: 'incident',
+        sourceId: 'doc-02'
       },
       {
         date: 'May 24, 2026',
         title: 'Architecture Review',
         description: 'Evaluated system bottlenecks and infrastructure design.',
-        type: 'review'
+        type: 'review',
+        sourceId: 'cal-01'
       },
       {
         date: 'May 23, 2026',
         title: 'Gemini Strategy Sync',
         description: 'Standardized AI capabilities across internal services.',
-        type: 'decision'
+        type: 'decision',
+        sourceId: 'cal-03'
       }
     ],
     evidence: sources.slice(0, 3)
