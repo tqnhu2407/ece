@@ -33,10 +33,10 @@ export const SourceDetailModal: React.FC<SourceDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-[#0D1116] rounded-2xl max-w-lg w-full p-6 border border-[#21262d] space-y-6">
-        <div className="flex items-start justify-between border-b border-[#21262d] pb-3">
+      <div className="bg-[#0D1116] rounded-[8px] max-w-lg w-full p-6 border border-[#21262d] space-y-6">
+        <div className="flex items-start justify-between border-b border-[#21262d] pb-4">
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-[#020408] border border-[#21262d]">
+            <div className="p-2 rounded-[8px] bg-[#020408] border border-[#21262d]">
               {getSourceIcon(source.type)}
             </div>
             <div>
@@ -47,7 +47,7 @@ export const SourceDetailModal: React.FC<SourceDetailModalProps> = ({
             </div>
           </div>
 
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[#020408] text-zinc-400 hover:text-white transition">
+          <button onClick={onClose} className="p-2 rounded-[8px] hover:bg-[#020408] text-zinc-400 hover:text-white transition cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -60,29 +60,29 @@ export const SourceDetailModal: React.FC<SourceDetailModalProps> = ({
             </div>
           )}
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             <span className="text-[12px] font-bold text-zinc-400 uppercase tracking-wider">Summary</span>
-            <p className="p-3 bg-[#020408] rounded-xl border border-[#21262d] text-zinc-300 leading-relaxed text-[14px]">
+            <p className="p-4 bg-[#020408] rounded-[8px] border border-[#21262d] text-zinc-300 leading-relaxed text-[14px]">
               {source.summary}
             </p>
           </div>
 
           {source.details && (
-            <div className="space-y-1">
+            <div className="space-y-2">
               <span className="text-[12px] font-bold text-zinc-400 uppercase tracking-wider">Full Notes / Context Payload</span>
-              <p className="p-3 bg-[#020408] text-zinc-300 font-mono text-[12px] rounded-xl border border-[#21262d] leading-relaxed whitespace-pre-line max-h-48 overflow-y-auto">
+              <p className="p-4 bg-[#020408] text-zinc-300 font-mono text-[12px] rounded-[8px] border border-[#21262d] leading-relaxed whitespace-pre-line max-h-48 overflow-y-auto">
                 {source.details}
               </p>
             </div>
           )}
         </div>
 
-        <div className="pt-2 flex justify-between items-center border-t border-[#21262d]">
+        <div className="pt-4 flex justify-between items-center border-t border-[#21262d]">
           <a
             href={source.url || '#'}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center space-x-1.5 text-[12px] font-bold text-[#5991F1] hover:text-[#8bb6ff] transition"
+            className="inline-flex items-center space-x-2 text-[12px] font-bold text-[#5991F1] hover:text-[#8bb6ff] transition"
           >
             <span>Open in {getSourceBadgeText(source.type)}</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -90,7 +90,7 @@ export const SourceDetailModal: React.FC<SourceDetailModalProps> = ({
 
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-[12px] font-bold bg-[#F9FEFF] text-black hover:bg-zinc-200 transition cursor-pointer"
+            className="px-4 py-2 rounded-[8px] text-[12px] font-bold bg-[#F9FEFF] text-black hover:bg-zinc-200 transition cursor-pointer"
           >
             Close Inspector
           </button>

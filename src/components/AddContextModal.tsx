@@ -49,10 +49,10 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-[#0D1116] rounded-2xl max-w-lg w-full p-6 border border-[#21262d] space-y-6">
-        <div className="flex items-center justify-between border-b border-[#21262d] pb-3">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-[#020408] border border-[#21262d] flex items-center justify-center text-zinc-300">
+      <div className="bg-[#0D1116] rounded-[8px] max-w-lg w-full p-6 border border-[#21262d] space-y-6">
+        <div className="flex items-center justify-between border-b border-[#21262d] pb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-[8px] bg-[#020408] border border-[#21262d] flex items-center justify-center text-zinc-300">
               <Plus className="w-4 h-4" />
             </div>
             <div>
@@ -61,14 +61,14 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
             </div>
           </div>
 
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[#020408] text-zinc-400 hover:text-white transition">
+          <button onClick={onClose} className="p-2 rounded-[8px] hover:bg-[#020408] text-zinc-400 hover:text-white transition cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+            <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
               Title
             </label>
             <input
@@ -77,19 +77,19 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Architecture Review: Session Management"
-              className="w-full bg-[#020408] border border-[#21262d] rounded-xl px-3 py-2 text-[14px] text-white placeholder-zinc-500 outline-none focus:border-zinc-500"
+              className="w-full bg-[#020408] border border-[#21262d] rounded-[8px] px-4 py-2 text-[14px] text-white placeholder-zinc-500 outline-none focus:border-zinc-500"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+              <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
                 Context Type
               </label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as ContextType)}
-                className="w-full bg-[#020408] border border-[#21262d] rounded-xl px-3 py-2 text-[14px] text-white outline-none focus:border-zinc-500"
+                className="w-full bg-[#020408] border border-[#21262d] rounded-[8px] px-4 py-2 text-[14px] text-white outline-none focus:border-zinc-500"
               >
                 <option value="doc">Google Docs / RFC</option>
                 <option value="calendar">Google Calendar Meeting</option>
@@ -99,7 +99,7 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+              <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
                 Author / Host
               </label>
               <input
@@ -107,13 +107,13 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
                 value={authorOrHost}
                 onChange={(e) => setAuthorOrHost(e.target.value)}
                 placeholder="e.g. Alex Rivers"
-                className="w-full bg-[#020408] border border-[#21262d] rounded-xl px-3 py-2 text-[14px] text-white placeholder-zinc-500 outline-none focus:border-zinc-500"
+                className="w-full bg-[#020408] border border-[#21262d] rounded-[8px] px-4 py-2 text-[14px] text-white placeholder-zinc-500 outline-none focus:border-zinc-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+            <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
               Summary (1-2 sentences)
             </label>
             <textarea
@@ -122,12 +122,12 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               placeholder="Brief summary of key decisions, discussion points, or conclusions..."
-              className="w-full bg-[#020408] border border-[#21262d] rounded-xl p-3 text-[14px] text-white placeholder-zinc-500 outline-none focus:border-zinc-500 resize-none"
+              className="w-full bg-[#020408] border border-[#21262d] rounded-[8px] p-4 text-[14px] text-white placeholder-zinc-500 outline-none focus:border-zinc-500 resize-none"
             />
           </div>
 
           <div>
-            <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+            <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
               Detailed Notes (Optional)
             </label>
             <textarea
@@ -135,22 +135,22 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               placeholder="Paste full raw discussion notes, benchmark results, or tradeoffs..."
-              className="w-full bg-[#020408] border border-[#21262d] rounded-xl p-3 text-[14px] text-white placeholder-zinc-500 outline-none focus:border-zinc-500 resize-none"
+              className="w-full bg-[#020408] border border-[#21262d] rounded-[8px] p-4 text-[14px] text-white placeholder-zinc-500 outline-none focus:border-zinc-500 resize-none"
             />
           </div>
 
-          <div className="pt-2 flex justify-end space-x-2">
+          <div className="pt-4 flex justify-end space-x-2 border-t border-[#21262d]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-[12px] font-bold text-zinc-400 hover:text-white hover:bg-[#020408] transition"
+              className="px-4 py-2 rounded-[8px] text-[12px] font-bold text-zinc-400 hover:text-white hover:bg-[#020408] transition cursor-pointer"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-[12px] font-bold bg-[#F9FEFF] text-black hover:bg-zinc-200 transition cursor-pointer"
+              className="px-6 py-2 rounded-[8px] text-[12px] font-bold bg-[#F9FEFF] text-black hover:bg-zinc-200 transition cursor-pointer"
             >
               Sync Context
             </button>

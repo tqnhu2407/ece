@@ -69,7 +69,7 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
       implementation: 'Implementation'
     };
     return (
-      <span className="px-2 py-0.5 text-[12px] font-bold uppercase tracking-wider bg-[#020408] text-zinc-300 border border-[#21262d] rounded">
+      <span className="px-2 py-0.5 text-[12px] font-bold uppercase tracking-wider bg-[#020408] text-zinc-300 border border-[#21262d] rounded-[8px]">
         {labelMap[type] || type}
       </span>
     );
@@ -92,25 +92,25 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
           {result.relatedDecisionId && onSelectDecision && (
             <button
               onClick={() => onSelectDecision(result.relatedDecisionId!)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#0D1116] text-zinc-200 hover:bg-[#161b22] text-[12px] font-semibold border border-[#21262d] transition"
+              className="flex items-center space-x-2 px-4 py-2 rounded-[8px] bg-[#0D1116] text-zinc-200 hover:bg-[#161b22] text-[12px] font-semibold border border-[#21262d] transition cursor-pointer"
             >
-              <BookOpen className="w-3.5 h-3.5 text-zinc-400" />
+              <BookOpen className="w-4 h-4 text-zinc-400" />
               <span>View in Decision Library</span>
             </button>
           )}
 
           <button
             onClick={handleCopyReasoning}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#0D1116] text-zinc-200 hover:bg-[#161b22] text-[12px] font-semibold border border-[#21262d] transition"
+            className="flex items-center space-x-2 px-4 py-2 rounded-[8px] bg-[#0D1116] text-zinc-200 hover:bg-[#161b22] text-[12px] font-semibold border border-[#21262d] transition cursor-pointer"
           >
-            <Share2 className="w-3.5 h-3.5 text-zinc-400" />
+            <Share2 className="w-4 h-4 text-zinc-400" />
             <span>{copied ? 'Copied!' : 'Copy Reasoning'}</span>
           </button>
         </div>
       </div>
 
       {/* Question Header */}
-      <div className="bg-[#0D1116] text-white rounded-2xl p-6 sm:p-8 border border-[#21262d] space-y-4">
+      <div className="bg-[#0D1116] text-white rounded-[8px] p-6 sm:p-8 border border-[#21262d] space-y-4">
         <div className="flex items-center space-x-2 text-zinc-400 text-[12px] font-mono tracking-wider">
           <Sparkles className="w-4 h-4 text-zinc-400" />
           <span>Ask Why · Reconstructed Context</span>
@@ -121,29 +121,29 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
         </h1>
 
         {/* AI Answer Box */}
-        <div className="bg-[#020408] rounded-xl p-5 border border-[#21262d] text-[#F9FEFF] leading-relaxed text-[14px] sm:text-[15px] font-normal">
+        <div className="bg-[#020408] rounded-[8px] p-6 border border-[#21262d] text-[#F9FEFF] leading-relaxed text-[14px] sm:text-[15px] font-normal">
           <p>{result.answer}</p>
         </div>
 
         {/* Confidence Indicator */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#21262d] text-[12px]">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[#21262d] text-[12px]">
           <div className="flex items-center space-x-2">
             <span className="text-zinc-400 font-medium">Evidence Strength:</span>
-            <span className="px-2.5 py-1 rounded-full font-bold flex items-center space-x-1.5 bg-[#020408] text-zinc-200 border border-[#21262d]">
-              <ShieldCheck className="w-3.5 h-3.5 text-zinc-400" />
+            <span className="px-3 py-1 rounded-[8px] font-bold flex items-center space-x-2 bg-[#020408] text-zinc-200 border border-[#21262d]">
+              <ShieldCheck className="w-4 h-4 text-zinc-400" />
               <span>{result.confidence}</span>
             </span>
           </div>
 
-          <div className="text-zinc-400 flex items-center space-x-1">
-            <Info className="w-3.5 h-3.5 text-zinc-500" />
+          <div className="text-zinc-400 flex items-center space-x-1.5">
+            <Info className="w-4 h-4 text-zinc-500" />
             <span>{result.confidenceReason}</span>
           </div>
         </div>
       </div>
 
       {/* Reasoning Timeline Section with Integrated Evidence */}
-      <div className="bg-[#0D1116] rounded-2xl p-6 sm:p-8 border border-[#21262d] space-y-6">
+      <div className="bg-[#0D1116] rounded-[8px] p-6 sm:p-8 border border-[#21262d] space-y-6">
         <div>
           <h2 className="text-[22px] font-bold text-[#F9FEFF] flex items-center space-x-2">
             <Clock className="w-5 h-5 text-zinc-400" />
@@ -168,11 +168,11 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
 
                 <div 
                   onClick={() => matchedSource && onSourceClick(matchedSource)}
-                  className={`bg-[#020408] rounded-xl p-4 sm:p-5 border transition-all ${
+                  className={`bg-[#020408] rounded-[8px] p-4 sm:p-6 border transition-all ${
                     matchedSource 
                       ? 'cursor-pointer border-[#21262d] hover:border-zinc-600 hover:bg-[#161b22]' 
                       : 'border-[#21262d]'
-                  } space-y-2.5`}
+                  } space-y-3`}
                   title={matchedSource ? `Click to inspect: ${matchedSource.title}` : undefined}
                 >
                   <div className="flex items-center justify-between flex-wrap gap-2">
@@ -182,9 +182,9 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
                     </div>
 
                     {matchedSource && (
-                      <span className="inline-flex items-center space-x-1 text-[12px] font-semibold text-[#5991F1] bg-[#0D1116] border border-[#21262d] px-2 py-0.5 rounded-full group-hover:bg-[#5991F1] group-hover:text-black transition-colors">
+                      <span className="inline-flex items-center space-x-1.5 text-[12px] font-semibold text-[#5991F1] bg-[#0D1116] border border-[#21262d] px-3 py-1 rounded-[8px] group-hover:bg-[#5991F1] group-hover:text-black transition-colors">
                         <span>Inspect Evidence</span>
-                        <ExternalLink className="w-3 h-3" />
+                        <ExternalLink className="w-3.5 h-3.5" />
                       </span>
                     )}
                   </div>
@@ -198,9 +198,9 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
 
                   {/* Integrated Evidence Source Badge */}
                   {matchedSource && (
-                    <div className="pt-2.5 mt-1 border-t border-[#21262d] flex items-center justify-between gap-2 text-[12px]">
+                    <div className="pt-3 mt-1 border-t border-[#21262d] flex items-center justify-between gap-2 text-[12px]">
                       <div className="flex items-center space-x-2 min-w-0">
-                        <span className="flex items-center space-x-1.5 px-2 py-0.5 rounded-md bg-[#0D1116] border border-[#21262d] text-zinc-300 font-semibold shrink-0">
+                        <span className="flex items-center space-x-1.5 px-2 py-0.5 rounded-[8px] bg-[#0D1116] border border-[#21262d] text-zinc-300 font-semibold shrink-0">
                           {getSourceIcon(matchedSource.type)}
                           <span className="text-[12px]">{getSourceBadgeText(matchedSource.type)}</span>
                         </span>
