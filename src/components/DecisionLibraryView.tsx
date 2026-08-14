@@ -28,16 +28,11 @@ export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
   });
 
   const getStatusBadge = (status: DecisionItem['status']) => {
-    switch (status) {
-      case 'Implemented':
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">Implemented</span>;
-      case 'Awaiting Implementation':
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">Awaiting Implementation</span>;
-      case 'Under Review':
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">Under Review</span>;
-      default:
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">Deprecated</span>;
-    }
+    return (
+      <span className="px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-[#020408] text-zinc-300 border border-[#21262d]">
+        {status}
+      </span>
+    );
   };
 
   return (
@@ -45,20 +40,20 @@ export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
       
       {/* Title & Description */}
       <div className="space-y-2">
-        <div className="flex items-center space-x-2 text-indigo-600 font-semibold text-xs uppercase tracking-wider">
-          <BookOpen className="w-4 h-4" />
+        <div className="flex items-center space-x-2 text-zinc-400 font-semibold text-[12px] uppercase tracking-wider">
+          <BookOpen className="w-4 h-4 text-zinc-400" />
           <span>Collective Engineering Memory</span>
         </div>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="text-[32px] font-extrabold text-[#F9FEFF] tracking-tight leading-tight">
           Decision Library
         </h1>
-        <p className="text-slate-600 text-sm sm:text-base max-w-2xl">
+        <p className="text-zinc-400 text-[14px] max-w-2xl font-normal">
           Curated record of engineering architectural choices, rationale, and context timelines across your team.
         </p>
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4">
+      <div className="bg-[#0D1116] rounded-2xl p-4 border border-[#21262d] space-y-4">
         <div className="relative">
           <input
             id="search-decisions-input"
@@ -66,21 +61,21 @@ export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search decisions, technologies, or topics..."
-            className="w-full bg-slate-50 text-slate-900 placeholder-slate-400 pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white text-sm outline-none transition"
+            className="w-full bg-[#020408] text-[#F9FEFF] placeholder-zinc-500 pl-11 pr-4 py-3 rounded-xl border border-[#21262d] focus:border-zinc-500 text-[14px] outline-none transition"
           />
-          <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-5 h-5 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
         </div>
 
         {/* Category Pills */}
-        <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-100">
+        <div className="flex flex-wrap gap-2 pt-1 border-t border-[#21262d]">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition ${
                 selectedCategory === cat
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-[#F9FEFF] text-black font-bold'
+                  : 'bg-[#020408] text-zinc-400 hover:text-white hover:bg-[#161b22] border border-[#21262d]'
               }`}
             >
               {cat}
@@ -91,16 +86,16 @@ export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
 
       {/* Decisions Cards List */}
       <div className="space-y-4">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+        <h2 className="text-[12px] font-bold uppercase tracking-wider text-zinc-400">
           {filteredDecisions.length} Recent Engineering Decisions
         </h2>
 
         {filteredDecisions.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 space-y-3">
-            <p className="text-slate-500 text-sm">No decisions found matching your filter criteria.</p>
+          <div className="bg-[#0D1116] rounded-2xl p-12 text-center border border-[#21262d] space-y-3">
+            <p className="text-zinc-400 text-[14px]">No decisions found matching your filter criteria.</p>
             <button
               onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }}
-              className="text-xs font-bold text-indigo-600 hover:underline"
+              className="text-[12px] font-bold text-white hover:underline"
             >
               Clear filters
             </button>
@@ -111,32 +106,32 @@ export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
               <div
                 key={dec.id}
                 onClick={() => onSelectDecision(dec.id)}
-                className="bg-white hover:bg-slate-50/80 rounded-2xl p-6 border border-slate-200 hover:border-indigo-300 transition shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between space-y-4 group"
+                className="bg-[#0D1116] hover:bg-[#161b22]/70 rounded-2xl p-6 border border-[#21262d] hover:border-zinc-600 transition cursor-pointer flex flex-col justify-between space-y-4 group"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">
-                    <span className="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 rounded border border-indigo-100">
+                    <span className="px-2.5 py-0.5 text-[12px] font-bold uppercase tracking-wider bg-[#020408] text-zinc-300 rounded border border-[#21262d]">
                       {dec.category}
                     </span>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs text-slate-400 font-mono">{dec.date}</span>
+                      <span className="text-[12px] text-zinc-500 font-mono">{dec.date}</span>
                       {getStatusBadge(dec.status)}
                     </div>
                   </div>
 
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                  <h3 className="text-[20px] font-bold text-[#F9FEFF] group-hover:text-zinc-200 transition-colors leading-snug">
                     {dec.title}
                   </h3>
 
-                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                  <p className="text-[14px] text-zinc-400 leading-relaxed line-clamp-2">
                     {dec.summary}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                <div className="pt-3 border-t border-[#21262d] flex items-center justify-between text-[12px]">
                   <div className="flex flex-wrap gap-1">
                     {dec.tags.slice(0, 3).map((tag, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-medium">
+                      <span key={idx} className="px-2 py-0.5 bg-[#020408] text-zinc-400 border border-[#21262d] rounded text-[12px] font-medium">
                         #{tag}
                       </span>
                     ))}
@@ -147,7 +142,7 @@ export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
                       e.stopPropagation();
                       onSelectDecision(dec.id);
                     }}
-                    className="flex items-center space-x-1 text-indigo-600 font-bold group-hover:translate-x-0.5 transition"
+                    className="flex items-center space-x-1 text-zinc-300 font-bold group-hover:text-white group-hover:translate-x-0.5 transition text-[12px]"
                   >
                     <span>View decision</span>
                     <ArrowRight className="w-3.5 h-3.5" />

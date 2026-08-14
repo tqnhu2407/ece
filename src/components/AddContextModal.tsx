@@ -48,27 +48,27 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+      <div className="bg-[#0D1116] rounded-2xl max-w-lg w-full p-6 border border-[#21262d] space-y-6">
+        <div className="flex items-center justify-between border-b border-[#21262d] pb-3">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+            <div className="w-8 h-8 rounded-lg bg-[#020408] border border-[#21262d] flex items-center justify-center text-zinc-300">
               <Plus className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">Sync Engineering Context</h3>
-              <p className="text-xs text-slate-500">Inject meeting notes, RFCs, or PRs into team memory</p>
+              <h3 className="text-[20px] font-bold text-[#F9FEFF]">Sync Engineering Context</h3>
+              <p className="text-[12px] text-zinc-400">Inject meeting notes, RFCs, or PRs into team memory</p>
             </div>
           </div>
 
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[#020408] text-zinc-400 hover:text-white transition">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
               Title
             </label>
             <input
@@ -77,19 +77,19 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Architecture Review: Session Management"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500"
+              className="w-full bg-[#020408] border border-[#21262d] rounded-xl px-3 py-2 text-[14px] text-white placeholder-zinc-500 outline-none focus:border-zinc-500"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
                 Context Type
               </label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as ContextType)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500"
+                className="w-full bg-[#020408] border border-[#21262d] rounded-xl px-3 py-2 text-[14px] text-white outline-none focus:border-zinc-500"
               >
                 <option value="doc">Google Docs / RFC</option>
                 <option value="calendar">Google Calendar Meeting</option>
@@ -99,7 +99,7 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
                 Author / Host
               </label>
               <input
@@ -107,13 +107,13 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
                 value={authorOrHost}
                 onChange={(e) => setAuthorOrHost(e.target.value)}
                 placeholder="e.g. Alex Rivers"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500"
+                className="w-full bg-[#020408] border border-[#21262d] rounded-xl px-3 py-2 text-[14px] text-white placeholder-zinc-500 outline-none focus:border-zinc-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
               Summary (1-2 sentences)
             </label>
             <textarea
@@ -122,12 +122,12 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               placeholder="Brief summary of key decisions, discussion points, or conclusions..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-900 outline-none focus:border-indigo-500 resize-none"
+              className="w-full bg-[#020408] border border-[#21262d] rounded-xl p-3 text-[14px] text-white placeholder-zinc-500 outline-none focus:border-zinc-500 resize-none"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            <label className="block text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
               Detailed Notes (Optional)
             </label>
             <textarea
@@ -135,7 +135,7 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               placeholder="Paste full raw discussion notes, benchmark results, or tradeoffs..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-900 outline-none focus:border-indigo-500 resize-none"
+              className="w-full bg-[#020408] border border-[#21262d] rounded-xl p-3 text-[14px] text-white placeholder-zinc-500 outline-none focus:border-zinc-500 resize-none"
             />
           </div>
 
@@ -143,16 +143,16 @@ export const AddContextModal: React.FC<AddContextModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              className="px-4 py-2 rounded-xl text-[12px] font-bold text-zinc-400 hover:text-white hover:bg-[#020408] transition"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition"
+              className="px-5 py-2 rounded-xl text-[12px] font-bold bg-[#F9FEFF] text-black hover:bg-zinc-200 transition cursor-pointer"
             >
-              Sync into ECE Memory
+              Sync Context
             </button>
           </div>
         </form>

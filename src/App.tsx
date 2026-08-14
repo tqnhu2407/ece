@@ -84,7 +84,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950/5 text-slate-900 font-sans antialiased selection:bg-indigo-500 selection:text-white flex flex-col">
+    <div className="min-h-screen bg-[#020408] text-[#F9FEFF] font-sans antialiased selection:bg-zinc-800 selection:text-white flex flex-col">
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -149,10 +149,10 @@ export default function App() {
       />
 
       {/* Footer */}
-      <footer className="border-t border-slate-200/80 bg-white/50 backdrop-blur-sm py-6">
-        <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-1">
-          <p className="font-semibold text-slate-700">Engineering Context Engine (ECE)</p>
-          <p>Preserve engineering context · Maintain shared understanding · Prevent context decay</p>
+      <footer className="border-t border-[#21262d] bg-[#020408] py-6">
+        <div className="max-w-7xl mx-auto px-4 text-center text-[12px] text-zinc-500 space-y-1">
+          <p className="font-semibold text-zinc-300 text-[12px]">Engineering Context Engine (ECE)</p>
+          <p className="text-zinc-500 text-[12px]">Preserve engineering context · Maintain shared understanding · Prevent context decay</p>
         </div>
       </footer>
     </div>
