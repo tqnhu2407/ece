@@ -196,8 +196,7 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
                   onClick={() => item.decisionId && onSelectDecision(item.decisionId)}
                   className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl border border-[#21262d] bg-[#020408] hover:border-zinc-600 hover:bg-[#161b22] transition cursor-pointer group"
                 >
-                  <div className="flex items-center space-x-2.5 min-w-0 pr-2">
-                    <span className="w-2 h-2 rounded-full bg-zinc-400 shrink-0 group-hover:bg-white group-hover:scale-125 transition-all" />
+                  <div className="flex items-center min-w-0 pr-2">
                     <span className="text-[14px] font-semibold text-zinc-200 group-hover:text-white transition-colors truncate">
                       {item.title}
                     </span>
