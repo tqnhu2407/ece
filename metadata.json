@@ -1,5 +1,5 @@
 {
-  "name": "Engineering Context Engine",
+  "name": "Trace",
   "description": "An AI-powered context layer for engineering teams to preserve context, maintain shared understanding, and prevent context decay through Morning Briefs, Decision Library, and Ask Why reasoning reconstruction.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

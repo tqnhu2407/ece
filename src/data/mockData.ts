@@ -19,7 +19,7 @@ export const INITIAL_CONTEXT_SOURCES: ContextSource[] = [
     authorOrHost: 'Nhu T.',
     summary: 'Detailed RFC notes evaluating Redis removal vs. upgrade. Benchmarks showed in-memory LRU cache reduced mean latency from 68ms to 12ms.',
     details: 'Key tradeoffs discussed: In-memory cache means non-shared cache state across instances, but Payment API instances are stateless and cache hit ratio remains >94% with sticky routing.',
-    url: 'https://docs.google.com/document/d/payment-arch-notes-2026'
+    url: 'https://docs.google.com/document/d/payment-arch-notes-2026/edit'
   },
   {
     id: 'doc-02',
@@ -29,7 +29,7 @@ export const INITIAL_CONTEXT_SOURCES: ContextSource[] = [
     authorOrHost: 'DevOps On-Call',
     summary: 'Production incident where Payment API latency increased by 300% due to Redis connection pool exhaustion during peak load.',
     details: 'Root cause: Redis cluster master failover stalled worker threads for 4 minutes. Recommendation: Remove Redis dependency if distributed sync is not strictly required.',
-    url: 'https://docs.google.com/document/d/incident-42-report'
+    url: 'https://docs.google.com/document/d/incident-42-report/edit'
   },
   {
     id: 'github-01',
@@ -59,7 +59,7 @@ export const INITIAL_CONTEXT_SOURCES: ContextSource[] = [
     authorOrHost: 'Sarah L.',
     summary: 'Documented decision to update highlight extraction pipeline to asynchronous batch mode with Gemini filter.',
     details: 'Reduced false positive highlights from 28% to 4.2% while decreasing API compute expenditure by 35%.',
-    url: 'https://docs.google.com/document/d/adr-014-highlight-pipeline'
+    url: 'https://docs.google.com/document/d/adr-014-highlight-pipeline/edit'
   },
   {
     id: 'github-02',
@@ -79,7 +79,7 @@ export const INITIAL_CONTEXT_SOURCES: ContextSource[] = [
     authorOrHost: 'Alex Rivers',
     summary: 'Proposal to replace HTTP REST with gRPC for service-to-service communication to reduce serialization overhead.',
     details: 'Protobuf definitions will enforce strict contracts across services. Benchmark shows 4x payload throughput improvement.',
-    url: 'https://docs.google.com/document/d/rfc-grpc-migration'
+    url: 'https://docs.google.com/document/d/rfc-grpc-migration/edit'
   },
   {
     id: 'cal-03',

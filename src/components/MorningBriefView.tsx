@@ -71,10 +71,10 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
       {/* Top Header Greeting */}
       <motion.div variants={itemVariants} className="pb-4 border-b border-[#21262d]">
         <h1 className="text-[32px] font-extrabold text-[#F9FEFF] tracking-tight leading-tight mt-0.5">
-          Maintain your team's knowledge.
+          Understand the why behind every change.
         </h1>
         <p className="text-zinc-400 text-[14px] font-normal mt-2">
-          Your team has context. We make sure you don't lose it.
+          Trace every decision, discussion, and change across your team.
         </p>
       </motion.div>
 
@@ -103,7 +103,7 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask your team's context anything"
+            placeholder="Ask why decisions were made."
             className="w-full bg-[#020408] text-[#F9FEFF] placeholder-zinc-500 pl-12 pr-36 py-3.5 rounded-[8px] border border-[#21262d] focus:border-zinc-500 text-[14px] outline-none transition"
           />
           <Search className="w-5 h-5 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />

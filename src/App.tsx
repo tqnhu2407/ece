@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { User } from 'firebase/auth';
 import { Navbar } from './components/Navbar';
 import { MorningBriefView } from './components/MorningBriefView';
 import { AskWhyResultView } from './components/AskWhyResultView';
@@ -6,8 +7,10 @@ import { DecisionLibraryView } from './components/DecisionLibraryView';
 import { DecisionDetailView } from './components/DecisionDetailView';
 import { AddContextModal } from './components/AddContextModal';
 import { SourceDetailModal } from './components/SourceDetailModal';
+import { GoogleDocsModal } from './components/GoogleDocsModal';
 import { ContextSource, DecisionItem, MorningBriefData, ReasoningResult } from './types';
 import { INITIAL_MORNING_BRIEF } from './data/mockData';
+import { initAuth } from './lib/firebaseAuth';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'brief' | 'library'>('brief');
@@ -23,6 +26,26 @@ export default function App() {
 
   const [isAsking, setIsAsking] = useState(false);
   const [isAddContextOpen, setIsAddContextOpen] = useState(false);
+  
+  // Google Docs & Workspace state
+  const [user, setUser] = useState<User | null>(null);
+  const [isGoogleDocsOpen, setIsGoogleDocsOpen] = useState(false);
+  const [exportingDecision, setExportingDecision] = useState<DecisionItem | null>(null);
+
+  // Initialize Firebase Auth listener on app load
+  useEffect(() => {
+    const unsubscribe = initAuth(
+      (authenticatedUser) => {
+        setUser(authenticatedUser);
+      },
+      () => {
+        setUser(null);
+      }
+    );
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
 
   // Fetch initial data from Express backend API
   useEffect(() => {
@@ -66,7 +89,7 @@ export default function App() {
     }
   };
 
-  // Handle sync new context note
+  // Handle sync new context note (manual)
   const handleAddContext = async (newSourceData: any) => {
     try {
       const res = await fetch('/api/context/add', {
@@ -83,6 +106,30 @@ export default function App() {
     }
   };
 
+  // Handle import Google Doc directly into Trace
+  const handleImportDocAsContext = async (docSourceData: Omit<ContextSource, 'id'>) => {
+    try {
+      const res = await fetch('/api/context/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(docSourceData)
+      });
+      const data = await res.json();
+      if (data.source) {
+        setContextSources((prev) => [data.source, ...prev]);
+      }
+    } catch (err) {
+      console.error('Failed to import Google Doc to Trace:', err);
+      throw err;
+    }
+  };
+
+  // Handle export decision to Google Doc
+  const handleStartExportDecision = (decision: DecisionItem) => {
+    setExportingDecision(decision);
+    setIsGoogleDocsOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-[#020408] text-[#F9FEFF] font-sans antialiased selection:bg-zinc-800 selection:text-white flex flex-col">
       {/* Top Navbar */}
@@ -95,8 +142,12 @@ export default function App() {
             if (!selectedDecision) setCurrentView('brief'); // Default to library list
           }
         }}
-        onOpenAddContext={() => setIsAddContextOpen(true)}
-        userName={brief.user.name}
+        onOpenGoogleDocs={() => {
+          setExportingDecision(null);
+          setIsGoogleDocsOpen(true);
+        }}
+        user={user}
+        userName={user?.displayName || brief.user.name}
       />
 
       {/* Main Content Area */}
@@ -123,6 +174,10 @@ export default function App() {
           <DecisionLibraryView
             decisions={decisions}
             onSelectDecision={handleSelectDecision}
+            onOpenGoogleDocs={() => {
+              setExportingDecision(null);
+              setIsGoogleDocsOpen(true);
+            }}
           />
         )}
 
@@ -132,6 +187,7 @@ export default function App() {
             onBack={() => setCurrentView('brief')}
             onAskWhyAboutDecision={handleAskWhy}
             onSourceClick={(source) => setInspectSource(source)}
+            onExportToGoogleDocs={handleStartExportDecision}
           />
         )}
       </main>
@@ -148,13 +204,26 @@ export default function App() {
         onClose={() => setInspectSource(null)}
       />
 
+      <GoogleDocsModal
+        isOpen={isGoogleDocsOpen}
+        onClose={() => {
+          setIsGoogleDocsOpen(false);
+          setExportingDecision(null);
+        }}
+        user={user}
+        onUserAuthChange={(newUser) => setUser(newUser)}
+        onImportDocAsContext={handleImportDocAsContext}
+        exportDecision={exportingDecision}
+      />
+
       {/* Footer */}
       <footer className="border-t border-[#21262d] bg-[#020408] py-6">
         <div className="max-w-7xl mx-auto px-4 text-center text-[12px] text-zinc-500 space-y-1">
-          <p className="font-semibold text-zinc-300 text-[12px]">Engineering Context Engine (ECE)</p>
-          <p className="text-zinc-500 text-[12px]">Preserve engineering context · Maintain shared understanding · Prevent context decay</p>
+          <p className="font-semibold text-zinc-300 text-[12px]">Trace</p>
+          <p className="text-zinc-500 text-[12px]">Trace decisions. Preserve knowledge.</p>
         </div>
       </footer>
     </div>
   );
 }
+

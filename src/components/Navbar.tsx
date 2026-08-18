@@ -1,17 +1,20 @@
 import React from 'react';
-import { BrainCircuit, BookOpen, Plus, Sparkles } from 'lucide-react';
+import { BrainCircuit, BookOpen, Sparkles, FileText } from 'lucide-react';
+import { User } from 'firebase/auth';
 
 interface NavbarProps {
   activeTab: 'brief' | 'library';
   setActiveTab: (tab: 'brief' | 'library') => void;
-  onOpenAddContext: () => void;
+  onOpenGoogleDocs: () => void;
+  user: User | null;
   userName: string;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
-  onOpenAddContext,
+  onOpenGoogleDocs,
+  user,
   userName,
 }) => {
   return (
@@ -27,14 +30,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div>
               <div className="flex items-center space-x-2">
                 <span className="font-bold text-[18px] tracking-tight text-[#F9FEFF]">
-                  Engineering Context Engine
-                </span>
-                <span className="px-2 py-0.5 text-[12px] font-mono font-semibold bg-[#020408] text-zinc-400 border border-[#21262d] rounded-[8px]">
-                  ECE
+                  Trace
                 </span>
               </div>
               <p className="text-[12px] text-zinc-400 hidden sm:block">
-                Maintain Understanding · Prevent Context Decay
+                Trace decisions. Preserve knowledge.
               </p>
             </div>
           </div>
@@ -44,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="nav-brief-tab"
               onClick={() => setActiveTab('brief')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-[8px] text-[14px] font-medium transition-all ${
+              className={`flex items-center space-x-2 px-4 py-2 rounded-[8px] text-[14px] font-medium transition-all cursor-pointer ${
                 activeTab === 'brief'
                   ? 'bg-[#F9FEFF] text-black shadow-sm font-semibold'
                   : 'text-zinc-400 hover:text-white hover:bg-[#0D1116]'
@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="nav-library-tab"
               onClick={() => setActiveTab('library')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-[8px] text-[14px] font-medium transition-all ${
+              className={`flex items-center space-x-2 px-4 py-2 rounded-[8px] text-[14px] font-medium transition-all cursor-pointer ${
                 activeTab === 'library'
                   ? 'bg-[#F9FEFF] text-black shadow-sm font-semibold'
                   : 'text-zinc-400 hover:text-white hover:bg-[#0D1116]'
@@ -70,22 +70,25 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Actions & User Profile */}
           <div className="flex items-center space-x-3">
+            {/* Google Docs Integration Quick Trigger */}
             <button
-              id="add-context-btn"
-              onClick={onOpenAddContext}
-              className="hidden md:flex items-center space-x-2 bg-[#020408] hover:bg-[#161b22] text-zinc-200 text-[12px] font-semibold px-4 py-2 rounded-[8px] border border-[#21262d] transition cursor-pointer"
-              title="Add a meeting note, RFC, or incident report into team context"
+              id="google-docs-btn"
+              onClick={onOpenGoogleDocs}
+              className="flex items-center space-x-2 bg-[#020408] hover:bg-[#161b22] text-zinc-200 text-[12px] font-semibold px-3 py-1.5 rounded-[8px] border border-[#21262d] transition cursor-pointer"
+              title="Browse, search, or sync Google Docs"
             >
-              <Plus className="w-4 h-4 text-zinc-400" />
-              <span>Connect Sources</span>
+              <FileText className="w-4 h-4 text-blue-400" />
+              <span className="hidden sm:inline">Google Docs</span>
             </button>
 
             {/* User Avatar */}
-            <div className="flex items-center space-x-2 pl-2 border-l border-[#21262d]">
+            <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-[8px] bg-[#020408] border border-[#21262d] flex items-center justify-center text-[12px] font-bold text-zinc-200">
-                {userName.charAt(0)}
+                {user?.displayName ? user.displayName.charAt(0) : userName.charAt(0)}
               </div>
-              <span className="text-[12px] font-medium text-zinc-400 hidden sm:inline-block">{userName}</span>
+              <span className="text-[12px] font-medium text-zinc-400 hidden md:inline-block">
+                {user?.displayName || userName}
+              </span>
             </div>
           </div>
 
@@ -94,3 +97,4 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+

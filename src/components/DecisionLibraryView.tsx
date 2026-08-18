@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { DecisionItem } from '../types';
-import { Search, BookOpen, ArrowRight, Tag, Calendar, User, CheckCircle2, Clock } from 'lucide-react';
+import { Search, BookOpen, ArrowRight, Tag, Calendar, User, CheckCircle2, Clock, FileText } from 'lucide-react';
 
 interface DecisionLibraryViewProps {
   decisions: DecisionItem[];
   onSelectDecision: (decisionId: string) => void;
+  onOpenGoogleDocs?: () => void;
 }
 
 export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
   decisions,
   onSelectDecision,
+  onOpenGoogleDocs,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -39,17 +41,29 @@ export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8 animate-fadeIn">
       
       {/* Title & Description */}
-      <div className="space-y-2">
-        <div className="flex items-center space-x-2 text-zinc-400 font-semibold text-[12px] uppercase tracking-wider">
-          <BookOpen className="w-4 h-4 text-zinc-400" />
-          <span>Collective Engineering Memory</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2 text-zinc-400 font-semibold text-[12px] uppercase tracking-wider">
+            <BookOpen className="w-4 h-4 text-zinc-400" />
+            <span>Collective Engineering Memory</span>
+          </div>
+          <h1 className="text-[32px] font-extrabold text-[#F9FEFF] tracking-tight leading-tight">
+            Decision Library
+          </h1>
+          <p className="text-zinc-400 text-[14px] max-w-2xl font-normal">
+            Curated record of engineering architectural choices, rationale, and context timelines across your team.
+          </p>
         </div>
-        <h1 className="text-[32px] font-extrabold text-[#F9FEFF] tracking-tight leading-tight">
-          Decision Library
-        </h1>
-        <p className="text-zinc-400 text-[14px] max-w-2xl font-normal">
-          Curated record of engineering architectural choices, rationale, and context timelines across your team.
-        </p>
+
+        {onOpenGoogleDocs && (
+          <button
+            onClick={onOpenGoogleDocs}
+            className="self-start sm:self-auto flex items-center space-x-2 bg-[#0D1116] hover:bg-[#161b22] text-zinc-200 hover:text-white px-4 py-2 rounded-[8px] border border-[#21262d] text-[12px] font-semibold transition cursor-pointer"
+          >
+            <FileText className="w-4 h-4 text-blue-400" />
+            <span>Import Google Doc</span>
+          </button>
+        )}
       </div>
 
       {/* Search & Filter Bar */}

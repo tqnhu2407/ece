@@ -31,6 +31,24 @@ export const SourceDetailModal: React.FC<SourceDetailModalProps> = ({
     }
   };
 
+  const getResolvedSourceUrl = (src: ContextSource): string => {
+    if (src.type === 'doc') {
+      if (src.metadata?.googleDocId) {
+        return `https://docs.google.com/document/d/${src.metadata.googleDocId}/edit`;
+      }
+      if (src.url && src.url !== 'https://docs.google.com' && src.url !== 'https://docs.google.com/' && !src.url.endsWith('/u/0/')) {
+        return src.url;
+      }
+      if (src.id && !src.id.startsWith('custom-')) {
+        return `https://docs.google.com/document/d/${src.id}/edit`;
+      }
+      return src.url || 'https://docs.google.com';
+    }
+    return src.url || '#';
+  };
+
+  const sourceUrl = getResolvedSourceUrl(source);
+
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-[#0D1116] rounded-[8px] max-w-lg w-full p-6 border border-[#21262d] space-y-6">
@@ -69,7 +87,7 @@ export const SourceDetailModal: React.FC<SourceDetailModalProps> = ({
 
           {source.details && (
             <div className="space-y-2">
-              <span className="text-[12px] font-bold text-zinc-400 uppercase tracking-wider">Full Notes / Context Payload</span>
+              <span className="text-[12px] font-bold text-zinc-400 uppercase tracking-wider">Full Notes</span>
               <p className="p-4 bg-[#020408] text-zinc-300 font-mono text-[12px] rounded-[8px] border border-[#21262d] leading-relaxed whitespace-pre-line max-h-48 overflow-y-auto">
                 {source.details}
               </p>
@@ -79,7 +97,7 @@ export const SourceDetailModal: React.FC<SourceDetailModalProps> = ({
 
         <div className="pt-4 flex justify-between items-center border-t border-[#21262d]">
           <a
-            href={source.url || '#'}
+            href={sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center space-x-2 text-[12px] font-bold text-[#5991F1] hover:text-[#8bb6ff] transition"

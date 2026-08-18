@@ -10,7 +10,8 @@ import {
   Clock, 
   ExternalLink,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  UploadCloud
 } from 'lucide-react';
 
 interface DecisionDetailViewProps {
@@ -18,6 +19,7 @@ interface DecisionDetailViewProps {
   onBack: () => void;
   onAskWhyAboutDecision: (question: string) => void;
   onSourceClick: (source: ContextSource) => void;
+  onExportToGoogleDocs?: (decision: DecisionItem) => void;
 }
 
 export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
@@ -25,6 +27,7 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
   onBack,
   onAskWhyAboutDecision,
   onSourceClick,
+  onExportToGoogleDocs,
 }) => {
 
   const getSourceIcon = (type: ContextSource['type']) => {
@@ -68,14 +71,27 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8 animate-fadeIn">
       
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        className="flex items-center space-x-2 text-[14px] font-semibold text-zinc-400 hover:text-[#5991F1] transition cursor-pointer"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        <span>Back to Decision Library</span>
-      </button>
+      {/* Top Action Bar */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={onBack}
+          className="flex items-center space-x-2 text-[14px] font-semibold text-zinc-400 hover:text-[#5991F1] transition cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Decision Library</span>
+        </button>
+
+        {onExportToGoogleDocs && (
+          <button
+            onClick={() => onExportToGoogleDocs(decision)}
+            className="flex items-center space-x-2 bg-[#0D1116] hover:bg-[#161b22] text-zinc-200 hover:text-white px-3.5 py-1.5 rounded-[8px] border border-[#21262d] text-[12px] font-semibold transition cursor-pointer"
+            title="Export this decision as an Architecture Decision Record (ADR) in Google Docs"
+          >
+            <FileText className="w-4 h-4 text-blue-400" />
+            <span>Export to Google Docs</span>
+          </button>
+        )}
+      </div>
 
       {/* Decision Header */}
       <div className="bg-[#0D1116] rounded-[8px] p-6 sm:p-8 border border-[#21262d] space-y-4">
@@ -107,24 +123,27 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
         </div>
       </div>
 
-      {/* Decision Statement */}
-      <div className="bg-[#0D1116] rounded-[8px] p-6 sm:p-8 border border-[#21262d] space-y-3">
-        <h2 className="text-[20px] font-bold uppercase tracking-tight text-[#F9FEFF]">
-          DECISION SUMMARY
-        </h2>
-        <p className="text-zinc-200 text-[14px] sm:text-[15px] leading-relaxed font-normal">
-          {decision.summary}
-        </p>
-      </div>
+      {/* Decision Summary & Why Rationale Side-by-Side Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        {/* Decision Summary (Left) */}
+        <div className="bg-[#0D1116] rounded-[8px] p-6 sm:p-8 border border-[#21262d] space-y-3 flex flex-col">
+          <h2 className="text-[20px] font-bold uppercase tracking-tight text-[#F9FEFF]">
+            DECISION SUMMARY
+          </h2>
+          <p className="text-zinc-200 text-[14px] sm:text-[15px] leading-relaxed font-normal">
+            {decision.summary}
+          </p>
+        </div>
 
-      {/* Why Rationale */}
-      <div className="bg-[#0D1116] rounded-[8px] p-6 sm:p-8 border border-[#21262d] space-y-3">
-        <h2 className="text-[20px] font-bold uppercase tracking-tight text-[#F9FEFF]">
-          WHY THIS DECISION WAS MADE
-        </h2>
-        <p className="text-zinc-300 text-[14px] sm:text-[15px] leading-relaxed">
-          {decision.why}
-        </p>
+        {/* Why Rationale (Right) */}
+        <div className="bg-[#0D1116] rounded-[8px] p-6 sm:p-8 border border-[#21262d] space-y-3 flex flex-col">
+          <h2 className="text-[20px] font-bold uppercase tracking-tight text-[#F9FEFF]">
+            WHY THIS DECISION WAS MADE
+          </h2>
+          <p className="text-zinc-300 text-[14px] sm:text-[15px] leading-relaxed">
+            {decision.why}
+          </p>
+        </div>
       </div>
 
       {/* Context Timeline with Integrated Evidence */}
@@ -208,13 +227,13 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
         <div className="max-w-md mx-auto space-y-2">
           <div className="inline-flex items-center space-x-2 text-zinc-400 text-[12px] font-bold uppercase tracking-wider">
             <Sparkles className="w-4 h-4 text-zinc-400" />
-            <span>Deep Context Reconstruction</span>
+            <span>Understand the full story</span>
           </div>
           <h3 className="text-[20px] font-bold text-[#F9FEFF]">
-            Want to understand the underlying rationale deeper?
+            Need the complete rationale?
           </h3>
           <p className="text-[14px] text-zinc-400">
-            Let the Context Engine synthesize all linked meetings, incident reports, and review notes in natural language.
+            Trace linked meetings, incidents, documents, and pull requests to understand the decision.
           </p>
         </div>
 

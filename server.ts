@@ -41,21 +41,35 @@ app.get('/api/context-sources', (req, res) => {
 });
 
 app.post('/api/context/add', (req, res) => {
-  const { title, type, summary, details, authorOrHost, date } = req.body;
+  const { title, type, summary, details, authorOrHost, date, url, metadata } = req.body;
   if (!title || !type || !summary) {
     res.status(400).json({ error: 'Missing required fields: title, type, summary' });
     return;
   }
 
+  let resolvedUrl = url;
+  if (!resolvedUrl || resolvedUrl === 'https://docs.google.com' || resolvedUrl === 'https://docs.google.com/') {
+    if (metadata?.googleDocId) {
+      resolvedUrl = `https://docs.google.com/document/d/${metadata.googleDocId}/edit`;
+    } else if (type === 'github') {
+      resolvedUrl = 'https://github.com/org/repo';
+    } else if (type === 'calendar') {
+      resolvedUrl = 'https://calendar.google.com';
+    } else {
+      resolvedUrl = 'https://docs.google.com';
+    }
+  }
+
   const newSource: ContextSource = {
-    id: `custom-${Date.now()}`,
+    id: `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     type: ['calendar', 'doc', 'github', 'incident'].includes(type) ? type : 'doc',
     title,
     date: date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    authorOrHost: authorOrHost || 'Như T.',
+    authorOrHost: authorOrHost || 'Dũng Trần Chí',
     summary,
     details: details || summary,
-    url: type === 'github' ? 'https://github.com/org/repo' : type === 'calendar' ? 'https://calendar.google.com' : 'https://docs.google.com'
+    url: resolvedUrl,
+    metadata: metadata || {}
   };
 
   customSources.unshift(newSource);
@@ -94,7 +108,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Engineering Context Engine running on http://0.0.0.0:${PORT}`);
+    console.log(`Trace running on http://0.0.0.0:${PORT}`);
   });
 }
 
