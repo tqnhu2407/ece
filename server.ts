@@ -51,6 +51,8 @@ app.post('/api/context/add', (req, res) => {
   if (!resolvedUrl || resolvedUrl === 'https://docs.google.com' || resolvedUrl === 'https://docs.google.com/') {
     if (metadata?.googleDocId) {
       resolvedUrl = `https://docs.google.com/document/d/${metadata.googleDocId}/edit`;
+    } else if (metadata?.googleCalendarEventId) {
+      resolvedUrl = metadata.meetLink || 'https://calendar.google.com';
     } else if (type === 'github') {
       resolvedUrl = 'https://github.com/org/repo';
     } else if (type === 'calendar') {
@@ -60,8 +62,17 @@ app.post('/api/context/add', (req, res) => {
     }
   }
 
+  const calendarEventId = metadata?.googleCalendarEventId;
+  const docId = metadata?.googleDocId;
+  const existingIndex = customSources.findIndex(
+    s =>
+      (calendarEventId && s.metadata?.googleCalendarEventId === calendarEventId) ||
+      (docId && s.metadata?.googleDocId === docId) ||
+      s.title === title
+  );
+
   const newSource: ContextSource = {
-    id: `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    id: existingIndex >= 0 ? customSources[existingIndex].id : `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     type: ['calendar', 'doc', 'github', 'incident'].includes(type) ? type : 'doc',
     title,
     date: date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -72,7 +83,11 @@ app.post('/api/context/add', (req, res) => {
     metadata: metadata || {}
   };
 
-  customSources.unshift(newSource);
+  if (existingIndex >= 0) {
+    customSources[existingIndex] = newSource;
+  } else {
+    customSources.unshift(newSource);
+  }
   res.json({ success: true, source: newSource });
 });
 
@@ -92,6 +107,8 @@ app.post('/api/context/batch-add', (req, res) => {
     if (!resolvedUrl || resolvedUrl === 'https://docs.google.com' || resolvedUrl === 'https://docs.google.com/') {
       if (src.metadata?.googleDocId) {
         resolvedUrl = `https://docs.google.com/document/d/${src.metadata.googleDocId}/edit`;
+      } else if (src.metadata?.googleCalendarEventId) {
+        resolvedUrl = src.metadata.meetLink || 'https://calendar.google.com';
       } else if (src.type === 'github') {
         resolvedUrl = 'https://github.com/org/repo';
       } else if (src.type === 'calendar') {
@@ -102,8 +119,12 @@ app.post('/api/context/batch-add', (req, res) => {
     }
 
     const docId = src.metadata?.googleDocId;
+    const calendarEventId = src.metadata?.googleCalendarEventId;
     const existingIndex = customSources.findIndex(
-      s => (docId && s.metadata?.googleDocId === docId) || s.title === src.title
+      s =>
+        (calendarEventId && s.metadata?.googleCalendarEventId === calendarEventId) ||
+        (docId && s.metadata?.googleDocId === docId) ||
+        s.title === src.title
     );
 
     const newSource: ContextSource = {
@@ -136,10 +157,28 @@ app.post('/api/context/batch-add', (req, res) => {
 
 app.post('/api/ask-why', async (req, res) => {
   try {
-    const { question } = req.body;
+    const { question, clientContextSources } = req.body;
     if (!question || typeof question !== 'string') {
       res.status(400).json({ error: 'Question is required' });
       return;
+    }
+
+    // Ensure server-side customSources is reconciled with any client-supplied context
+    if (Array.isArray(clientContextSources) && clientContextSources.length > 0) {
+      for (const clientSrc of clientContextSources) {
+        const calId = clientSrc.metadata?.googleCalendarEventId;
+        const dId = clientSrc.metadata?.googleDocId;
+        const exists = customSources.some(
+          s =>
+            s.id === clientSrc.id ||
+            (calId && s.metadata?.googleCalendarEventId === calId) ||
+            (dId && s.metadata?.googleDocId === dId) ||
+            s.title === clientSrc.title
+        );
+        if (!exists) {
+          customSources.unshift(clientSrc);
+        }
+      }
     }
 
     const reasoning = await reconstructReasoning(question, customSources);

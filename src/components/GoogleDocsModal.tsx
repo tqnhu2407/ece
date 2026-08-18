@@ -37,8 +37,8 @@ interface GoogleDocsModalProps {
   onClose: () => void;
   user: User | null;
   onUserAuthChange: (user: User | null) => void;
-  onImportDocAsContext: (docSource: Omit<ContextSource, 'id'>) => Promise<void>;
-  onImportBatchDocsAsContext?: (docSources: Array<Omit<ContextSource, 'id'>>) => Promise<{ count: number; totalSources: number }>;
+  onImportDocAsContext: (docSource: Omit<ContextSource, 'id'>) => Promise<any>;
+  onImportBatchDocsAsContext?: (docSources: Array<Omit<ContextSource, 'id'>>) => Promise<{ count: number; totalSources: number; isVerified?: boolean }>;
   onSyncStatusUpdate?: (status: string | null) => void;
   exportDecision?: DecisionItem | null;
   onExportComplete?: (docUrl: string) => void;

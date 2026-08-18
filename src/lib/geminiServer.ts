@@ -22,7 +22,7 @@ export async function reconstructReasoning(
   question: string,
   extraContextSources: ContextSource[] = []
 ): Promise<ReasoningResult> {
-  const allSources = [...INITIAL_CONTEXT_SOURCES, ...extraContextSources];
+  const allSources = [...extraContextSources, ...INITIAL_CONTEXT_SOURCES];
   const allDecisions = INITIAL_DECISIONS;
 
   // Formulate prompt context string
@@ -127,6 +127,40 @@ function fallbackReasoningEngine(
 ): ReasoningResult {
   const qLower = question.toLowerCase();
 
+  // Dynamic matching across custom synced context sources (e.g. Google Docs, Google Calendar) FIRST
+  const queryTokens = qLower.split(/\W+/).filter(t => t.length > 2);
+  const matchedCustomSources = sources.filter(s => {
+    const textToMatch = `${s.title} ${s.summary} ${s.details || ''} ${s.authorOrHost || ''}`.toLowerCase();
+    return queryTokens.some(tok => textToMatch.includes(tok));
+  });
+
+  if (matchedCustomSources.length > 0) {
+    const primary = matchedCustomSources[0];
+    const sourceLabel =
+      primary.type === 'calendar'
+        ? 'Google Calendar event'
+        : primary.type === 'doc'
+        ? 'Google Doc'
+        : 'source';
+
+    return {
+      question,
+      answer: `Based on the latest synced ${sourceLabel} "${primary.title}": ${primary.summary}`,
+      confidence: 'High',
+      confidenceReason: `Directly reconstructed from the freshly ingested artifact "${primary.title}" and associated team context.`,
+      reasoningTimeline: [
+        {
+          date: primary.date,
+          title: `Context Reference: ${primary.title}`,
+          description: primary.summary.slice(0, 180) + (primary.summary.length > 180 ? '...' : ''),
+          type: primary.type === 'calendar' ? 'review' : 'decision',
+          sourceId: primary.id
+        }
+      ],
+      evidence: matchedCustomSources.slice(0, 4)
+    };
+  }
+
   if (qLower.includes('redis') || qLower.includes('payment') || qLower.includes('cache')) {
     const dec = decisions.find(d => d.id === 'dec-01') || decisions[0];
     return {
@@ -176,40 +210,6 @@ function fallbackReasoningEngine(
       reasoningTimeline: dec.timeline,
       evidence: dec.evidence,
       relatedDecisionId: 'dec-04'
-    };
-  }
-
-  // Dynamic matching across custom synced context sources (e.g. Google Docs, Google Calendar)
-  const queryTokens = qLower.split(/\W+/).filter(t => t.length > 2);
-  const matchedCustomSources = sources.filter(s => {
-    const textToMatch = `${s.title} ${s.summary} ${s.details || ''}`.toLowerCase();
-    return queryTokens.some(tok => textToMatch.includes(tok));
-  });
-
-  if (matchedCustomSources.length > 0) {
-    const primary = matchedCustomSources[0];
-    const sourceLabel =
-      primary.type === 'calendar'
-        ? 'Google Calendar event'
-        : primary.type === 'doc'
-        ? 'Google Doc'
-        : 'source';
-
-    return {
-      question,
-      answer: `Based on the latest synced ${sourceLabel} "${primary.title}": ${primary.summary}`,
-      confidence: 'High',
-      confidenceReason: `Directly reconstructed from the freshly ingested artifact "${primary.title}" and associated team context.`,
-      reasoningTimeline: [
-        {
-          date: primary.date,
-          title: `Context Reference: ${primary.title}`,
-          description: primary.summary.slice(0, 180) + (primary.summary.length > 180 ? '...' : ''),
-          type: primary.type === 'calendar' ? 'review' : 'decision',
-          sourceId: primary.id
-        }
-      ],
-      evidence: matchedCustomSources.slice(0, 4)
     };
   }
 

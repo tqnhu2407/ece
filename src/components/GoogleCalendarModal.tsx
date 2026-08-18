@@ -38,8 +38,8 @@ interface GoogleCalendarModalProps {
   onClose: () => void;
   user: User | null;
   onUserAuthChange: (user: User | null) => void;
-  onImportEventAsContext: (eventSource: Omit<ContextSource, 'id'>) => Promise<void>;
-  onImportBatchEventsAsContext?: (eventSources: Array<Omit<ContextSource, 'id'>>) => Promise<{ count: number; totalSources: number }>;
+  onImportEventAsContext: (eventSource: Omit<ContextSource, 'id'>) => Promise<any>;
+  onImportBatchEventsAsContext?: (eventSources: Array<Omit<ContextSource, 'id'>>) => Promise<{ count: number; totalSources: number; isVerified?: boolean }>;
   onSyncStatusUpdate?: (status: string | null) => void;
   scheduleForDecision?: DecisionItem | null;
 }
@@ -356,22 +356,25 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
       });
       onSyncStatusUpdate?.('Updating Trace memory…');
 
+      let syncedCount = extractedSources.length;
       if (onImportBatchEventsAsContext) {
-        await onImportBatchEventsAsContext(extractedSources);
+        const result = await onImportBatchEventsAsContext(extractedSources);
+        if (result && typeof result.count === 'number') {
+          syncedCount = result.count;
+        }
       } else {
         for (const src of extractedSources) {
           await onImportEventAsContext(src);
         }
       }
 
-      const count = extractedSources.length;
       const readyMsg =
-        count === 1
+        syncedCount === 1
           ? '1 calendar event synced and ready for Trace.'
-          : `${count} calendar events synced and ready to query.`;
+          : `${syncedCount} calendar events synced and ready to query.`;
 
       setSyncProgress({
-        current: count,
+        current: syncedCount,
         total: eventsToSync.length,
         currentTitle: '',
         stage: 'ready',

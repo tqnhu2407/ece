@@ -12,6 +12,10 @@ import { GoogleCalendarModal } from './components/GoogleCalendarModal';
 import { ContextSource, DecisionItem, MorningBriefData, ReasoningResult } from './types';
 import { INITIAL_MORNING_BRIEF } from './data/mockData';
 import { initAuth } from './lib/firebaseAuth';
+import {
+  executeSingleContextIngestion,
+  executeBatchContextIngestion,
+} from './lib/contextSyncLifecycle';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'brief' | 'library'>('brief');
@@ -78,7 +82,10 @@ export default function App() {
       const res = await fetch('/api/ask-why', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question })
+        body: JSON.stringify({
+          question,
+          clientContextSources: contextSources,
+        })
       });
       const data: ReasoningResult = await res.json();
       setReasoningResult(data);
@@ -119,77 +126,50 @@ export default function App() {
 
   // Handle single Google Doc import directly into Trace
   const handleImportDocAsContext = async (docSourceData: Omit<ContextSource, 'id'>) => {
-    setIsSyncingContext(true);
-    setSyncStatusMessage('Updating Trace memory…');
-    try {
-      const res = await fetch('/api/context/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(docSourceData)
-      });
-      if (!res.ok) {
-        throw new Error(`Single doc persistence failed: ${res.statusText}`);
-      }
-      
-      // Explicitly refresh client-side context sources state
-      const refreshRes = await fetch('/api/context-sources');
-      const allRefreshed = await refreshRes.json();
-      setContextSources(allRefreshed);
-
-      const notice = '1 document synced and ready for Trace.';
-      setLastSyncedNotice(notice);
-      setTimeout(() => {
-        setLastSyncedNotice((prev) => (prev === notice ? null : prev));
-      }, 6000);
-    } catch (err) {
-      console.error('Failed to import Google Doc to Trace:', err);
-      throw err;
-    } finally {
-      setIsSyncingContext(false);
-      setSyncStatusMessage(null);
-    }
+    return executeSingleContextIngestion(docSourceData, {
+      sourceType: 'doc',
+      onStatusUpdate: (status) => setSyncStatusMessage(status),
+      onSetSyncingState: (syncing) => setIsSyncingContext(syncing),
+      onSetNotice: (notice) => setLastSyncedNotice(notice),
+      onUpdateContextStore: (updated) => setContextSources(updated),
+    });
   };
 
   // Handle batch Google Docs import directly into Trace
   const handleImportBatchDocsAsContext = async (
     docsSourceData: Array<Omit<ContextSource, 'id'>>
-  ): Promise<{ count: number; totalSources: number }> => {
-    setIsSyncingContext(true);
-    setSyncStatusMessage('Updating Trace memory…');
-    try {
-      const res = await fetch('/api/context/batch-add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sources: docsSourceData })
-      });
-      if (!res.ok) {
-        throw new Error(`Batch persistence failed: ${res.statusText}`);
-      }
-      const data = await res.json();
+  ): Promise<{ count: number; totalSources: number; isVerified: boolean }> => {
+    return executeBatchContextIngestion(docsSourceData, {
+      sourceType: 'doc',
+      onStatusUpdate: (status) => setSyncStatusMessage(status),
+      onSetSyncingState: (syncing) => setIsSyncingContext(syncing),
+      onSetNotice: (notice) => setLastSyncedNotice(notice),
+      onUpdateContextStore: (updated) => setContextSources(updated),
+    });
+  };
 
-      // Explicitly refresh client-side context sources state
-      setSyncStatusMessage('Verifying context memory…');
-      const refreshRes = await fetch('/api/context-sources');
-      const allRefreshed = await refreshRes.json();
-      setContextSources(allRefreshed);
+  // Handle single Google Calendar event import directly into Trace
+  const handleImportCalendarEventAsContext = async (eventSourceData: Omit<ContextSource, 'id'>) => {
+    return executeSingleContextIngestion(eventSourceData, {
+      sourceType: 'calendar',
+      onStatusUpdate: (status) => setSyncStatusMessage(status),
+      onSetSyncingState: (syncing) => setIsSyncingContext(syncing),
+      onSetNotice: (notice) => setLastSyncedNotice(notice),
+      onUpdateContextStore: (updated) => setContextSources(updated),
+    });
+  };
 
-      const notice =
-        data.count === 1
-          ? '1 document synced and ready for Trace.'
-          : `${data.count} documents synced and ready to query.`;
-      setLastSyncedNotice(notice);
-      setTimeout(() => {
-        setLastSyncedNotice((prev) => (prev === notice ? null : prev));
-      }, 6000);
-
-      return { count: data.count, totalSources: allRefreshed.length };
-    } catch (err) {
-      console.error('Failed to batch import documents to Trace:', err);
-      throw err;
-    } finally {
-      setIsSyncingContext(false);
-      setSyncStatusMessage(null);
-    }
+  // Handle batch Google Calendar events import directly into Trace
+  const handleImportBatchCalendarEventsAsContext = async (
+    eventsSourceData: Array<Omit<ContextSource, 'id'>>
+  ): Promise<{ count: number; totalSources: number; isVerified: boolean }> => {
+    return executeBatchContextIngestion(eventsSourceData, {
+      sourceType: 'calendar',
+      onStatusUpdate: (status) => setSyncStatusMessage(status),
+      onSetSyncingState: (syncing) => setIsSyncingContext(syncing),
+      onSetNotice: (notice) => setLastSyncedNotice(notice),
+      onUpdateContextStore: (updated) => setContextSources(updated),
+    });
   };
 
   // Handle export decision to Google Doc
@@ -306,8 +286,8 @@ export default function App() {
         }}
         user={user}
         onUserAuthChange={(newUser) => setUser(newUser)}
-        onImportEventAsContext={handleImportDocAsContext}
-        onImportBatchEventsAsContext={handleImportBatchDocsAsContext}
+        onImportEventAsContext={handleImportCalendarEventAsContext}
+        onImportBatchEventsAsContext={handleImportBatchCalendarEventsAsContext}
         onSyncStatusUpdate={(status) => setSyncStatusMessage(status)}
         scheduleForDecision={schedulingDecision}
       />
