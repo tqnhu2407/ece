@@ -26,6 +26,11 @@ export default function App() {
 
   const [isAsking, setIsAsking] = useState(false);
   const [isAddContextOpen, setIsAddContextOpen] = useState(false);
+
+  // Sync lifecycle state
+  const [isSyncingContext, setIsSyncingContext] = useState(false);
+  const [syncStatusMessage, setSyncStatusMessage] = useState<string | null>(null);
+  const [lastSyncedNotice, setLastSyncedNotice] = useState<string | null>(null);
   
   // Google Docs & Workspace state
   const [user, setUser] = useState<User | null>(null);
@@ -62,6 +67,7 @@ export default function App() {
 
   // Handle Ask Why natural language query
   const handleAskWhy = async (question: string) => {
+    if (isSyncingContext) return;
     setIsAsking(true);
     try {
       const res = await fetch('/api/ask-why', {
@@ -106,21 +112,78 @@ export default function App() {
     }
   };
 
-  // Handle import Google Doc directly into Trace
+  // Handle single Google Doc import directly into Trace
   const handleImportDocAsContext = async (docSourceData: Omit<ContextSource, 'id'>) => {
+    setIsSyncingContext(true);
+    setSyncStatusMessage('Updating Trace memory…');
     try {
       const res = await fetch('/api/context/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(docSourceData)
       });
-      const data = await res.json();
-      if (data.source) {
-        setContextSources((prev) => [data.source, ...prev]);
+      if (!res.ok) {
+        throw new Error(`Single doc persistence failed: ${res.statusText}`);
       }
+      
+      // Explicitly refresh client-side context sources state
+      const refreshRes = await fetch('/api/context-sources');
+      const allRefreshed = await refreshRes.json();
+      setContextSources(allRefreshed);
+
+      const notice = '1 document synced and ready for Trace.';
+      setLastSyncedNotice(notice);
+      setTimeout(() => {
+        setLastSyncedNotice((prev) => (prev === notice ? null : prev));
+      }, 6000);
     } catch (err) {
       console.error('Failed to import Google Doc to Trace:', err);
       throw err;
+    } finally {
+      setIsSyncingContext(false);
+      setSyncStatusMessage(null);
+    }
+  };
+
+  // Handle batch Google Docs import directly into Trace
+  const handleImportBatchDocsAsContext = async (
+    docsSourceData: Array<Omit<ContextSource, 'id'>>
+  ): Promise<{ count: number; totalSources: number }> => {
+    setIsSyncingContext(true);
+    setSyncStatusMessage('Updating Trace memory…');
+    try {
+      const res = await fetch('/api/context/batch-add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sources: docsSourceData })
+      });
+      if (!res.ok) {
+        throw new Error(`Batch persistence failed: ${res.statusText}`);
+      }
+      const data = await res.json();
+
+      // Explicitly refresh client-side context sources state
+      setSyncStatusMessage('Verifying context memory…');
+      const refreshRes = await fetch('/api/context-sources');
+      const allRefreshed = await refreshRes.json();
+      setContextSources(allRefreshed);
+
+      const notice =
+        data.count === 1
+          ? '1 document synced and ready for Trace.'
+          : `${data.count} documents synced and ready to query.`;
+      setLastSyncedNotice(notice);
+      setTimeout(() => {
+        setLastSyncedNotice((prev) => (prev === notice ? null : prev));
+      }, 6000);
+
+      return { count: data.count, totalSources: allRefreshed.length };
+    } catch (err) {
+      console.error('Failed to batch import documents to Trace:', err);
+      throw err;
+    } finally {
+      setIsSyncingContext(false);
+      setSyncStatusMessage(null);
     }
   };
 
@@ -158,6 +221,10 @@ export default function App() {
             onAskWhy={handleAskWhy}
             onSelectDecision={handleSelectDecision}
             isAsking={isAsking}
+            isSyncingContext={isSyncingContext}
+            syncStatusMessage={syncStatusMessage}
+            lastSyncedNotice={lastSyncedNotice}
+            onDismissSyncedNotice={() => setLastSyncedNotice(null)}
           />
         )}
 
@@ -213,6 +280,8 @@ export default function App() {
         user={user}
         onUserAuthChange={(newUser) => setUser(newUser)}
         onImportDocAsContext={handleImportDocAsContext}
+        onImportBatchDocsAsContext={handleImportBatchDocsAsContext}
+        onSyncStatusUpdate={(status) => setSyncStatusMessage(status)}
         exportDecision={exportingDecision}
       />
 

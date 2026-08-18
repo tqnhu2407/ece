@@ -179,6 +179,33 @@ function fallbackReasoningEngine(
     };
   }
 
+  // Dynamic matching across custom synced context sources (e.g. Google Docs)
+  const queryTokens = qLower.split(/\W+/).filter(t => t.length > 2);
+  const matchedCustomSources = sources.filter(s => {
+    const textToMatch = `${s.title} ${s.summary} ${s.details || ''}`.toLowerCase();
+    return queryTokens.some(tok => textToMatch.includes(tok));
+  });
+
+  if (matchedCustomSources.length > 0) {
+    const primary = matchedCustomSources[0];
+    return {
+      question,
+      answer: `Based on the latest synced ${primary.type === 'doc' ? 'Google Doc' : 'source'} "${primary.title}": ${primary.summary}`,
+      confidence: 'High',
+      confidenceReason: `Directly reconstructed from the freshly ingested artifact "${primary.title}" and associated team context.`,
+      reasoningTimeline: [
+        {
+          date: primary.date,
+          title: `Context Reference: ${primary.title}`,
+          description: primary.summary.slice(0, 180) + (primary.summary.length > 180 ? '...' : ''),
+          type: 'decision',
+          sourceId: primary.id
+        }
+      ],
+      evidence: matchedCustomSources.slice(0, 4)
+    };
+  }
+
   // Generic matching fallback
   return {
     question,

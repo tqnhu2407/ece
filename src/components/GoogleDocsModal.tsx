@@ -38,6 +38,8 @@ interface GoogleDocsModalProps {
   user: User | null;
   onUserAuthChange: (user: User | null) => void;
   onImportDocAsContext: (docSource: Omit<ContextSource, 'id'>) => Promise<void>;
+  onImportBatchDocsAsContext?: (docSources: Array<Omit<ContextSource, 'id'>>) => Promise<{ count: number; totalSources: number }>;
+  onSyncStatusUpdate?: (status: string | null) => void;
   exportDecision?: DecisionItem | null;
   onExportComplete?: (docUrl: string) => void;
 }
@@ -48,6 +50,8 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
   user,
   onUserAuthChange,
   onImportDocAsContext,
+  onImportBatchDocsAsContext,
+  onSyncStatusUpdate,
   exportDecision,
   onExportComplete,
 }) => {
@@ -64,12 +68,21 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
 
   // Batch Sync progress states
   const [isBatchSyncing, setIsBatchSyncing] = useState(false);
-  const [syncProgress, setSyncProgress] = useState<{ current: number; total: number; currentTitle: string }>({
+  const [syncProgress, setSyncProgress] = useState<{
+    current: number;
+    total: number;
+    currentTitle: string;
+    stage: 'idle' | 'extracting' | 'persisting' | 'verifying' | 'ready';
+    statusText: string;
+  }>({
     current: 0,
     total: 0,
     currentTitle: '',
+    stage: 'idle',
+    statusText: '',
   });
   const [syncSuccessCount, setSyncSuccessCount] = useState<number | null>(null);
+  const [syncSuccessMessage, setSyncSuccessMessage] = useState<string | null>(null);
 
   // Individual Doc states
   const [individualDocs, setIndividualDocs] = useState<GoogleDocSummary[]>([]);
@@ -208,20 +221,27 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
 
     setIsBatchSyncing(true);
     setSyncSuccessCount(null);
+    setSyncSuccessMessage(null);
     setAuthError(null);
 
     try {
       const token = await getAccessToken();
       if (!token) throw new Error('Authentication expired. Please sign in again.');
 
-      let syncedCount = 0;
+      const extractedDocSources: Array<Omit<ContextSource, 'id'>> = [];
+
+      // Step 1: Sequential document fetch & content extraction
       for (let i = 0; i < docsToSync.length; i++) {
         const doc = docsToSync[i];
+        const statusText = `Syncing ${i + 1}/${docsToSync.length} documents…`;
         setSyncProgress({
           current: i + 1,
           total: docsToSync.length,
           currentTitle: doc.name,
+          stage: 'extracting',
+          statusText,
         });
+        onSyncStatusUpdate?.(statusText);
 
         try {
           const docContent = await getGoogleDoc(doc.id, token);
@@ -232,7 +252,7 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
             user?.displayName ||
             'Google Docs';
 
-          await onImportDocAsContext({
+          extractedDocSources.push({
             type: 'doc',
             title: doc.name,
             date: doc.modifiedTime
@@ -257,16 +277,54 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
               headingsCount: String(docContent.headings.length),
             },
           });
-          syncedCount++;
         } catch (singleDocErr) {
-          console.warn(`Failed to sync doc ${doc.name}:`, singleDocErr);
+          console.warn(`Failed to extract doc ${doc.name}:`, singleDocErr);
         }
       }
 
+      if (extractedDocSources.length === 0) {
+        throw new Error('No valid documents could be extracted from the selected list.');
+      }
+
+      // Step 2: Ingestion & memory persistence
+      setSyncProgress({
+        current: extractedDocSources.length,
+        total: docsToSync.length,
+        currentTitle: '',
+        stage: 'persisting',
+        statusText: 'Updating Trace memory…',
+      });
+      onSyncStatusUpdate?.('Updating Trace memory…');
+
+      if (onImportBatchDocsAsContext) {
+        await onImportBatchDocsAsContext(extractedDocSources);
+      } else {
+        for (const docSrc of extractedDocSources) {
+          await onImportDocAsContext(docSrc);
+        }
+      }
+
+      // Step 3: Verified query readiness
+      const syncedCount = extractedDocSources.length;
+      const readyMsg =
+        syncedCount === 1
+          ? '1 document synced and ready for Trace.'
+          : `${syncedCount} documents synced and ready to query.`;
+
+      setSyncProgress({
+        current: syncedCount,
+        total: docsToSync.length,
+        currentTitle: '',
+        stage: 'ready',
+        statusText: readyMsg,
+      });
+      onSyncStatusUpdate?.(null);
       setSyncSuccessCount(syncedCount);
+      setSyncSuccessMessage(readyMsg);
     } catch (err: any) {
       console.error('Failed batch sync of folder:', err);
       setAuthError(err.message || 'Failed to sync folder contents');
+      onSyncStatusUpdate?.(null);
     } finally {
       setIsBatchSyncing(false);
     }
@@ -296,6 +354,8 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
   const handleImportSingleToTrace = async () => {
     if (!selectedDoc || !selectedDocContent) return;
     setIsImportingSingle(true);
+    setSingleImportSuccess(false);
+    setAuthError(null);
 
     try {
       const summaryText = selectedDocContent.extractedText.slice(0, 300) + '...';
@@ -304,6 +364,8 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
         selectedDoc.owners?.[0]?.emailAddress ||
         user?.displayName ||
         'Google Docs';
+
+      onSyncStatusUpdate?.('Updating Trace memory…');
 
       await onImportDocAsContext({
         type: 'doc',
@@ -329,13 +391,15 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
         },
       });
 
+      onSyncStatusUpdate?.(null);
       setSingleImportSuccess(true);
       setTimeout(() => {
         setSingleImportSuccess(false);
-      }, 3000);
+      }, 4000);
     } catch (err: any) {
       console.error('Failed to import document into Trace:', err);
       setAuthError(err.message || 'Failed to sync Google Doc into Trace');
+      onSyncStatusUpdate?.(null);
     } finally {
       setIsImportingSingle(false);
     }
@@ -712,20 +776,22 @@ Synthesized by Trace Context Engine
                           <div className="p-2.5 bg-[#0D1116] rounded-[8px] border border-blue-900/50 text-[12px] text-blue-300 space-y-1.5">
                             <div className="flex items-center justify-between">
                               <span className="font-semibold">
-                                Syncing doc {syncProgress.current} of {syncProgress.total}...
+                                {syncProgress.statusText || `Syncing doc ${syncProgress.current} of ${syncProgress.total}...`}
                               </span>
-                              <RefreshCw className="w-3 h-3 animate-spin text-blue-400" />
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
                             </div>
-                            <p className="text-[11px] text-zinc-400 truncate font-mono">
-                              {syncProgress.currentTitle}
-                            </p>
+                            {syncProgress.currentTitle && (
+                              <p className="text-[11px] text-zinc-400 truncate font-mono">
+                                Extracting: {syncProgress.currentTitle}
+                              </p>
+                            )}
                           </div>
                         )}
 
-                        {syncSuccessCount !== null && !isBatchSyncing && (
+                        {syncSuccessMessage && !isBatchSyncing && (
                           <div className="p-2.5 bg-emerald-950/40 border border-emerald-800/50 rounded-[8px] flex items-center space-x-2 text-[12px] text-emerald-300">
                             <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                            <span>Successfully synced {syncSuccessCount} documents from "{selectedFolder.name}" into Trace!</span>
+                            <span className="font-medium">{syncSuccessMessage}</span>
                           </div>
                         )}
 
@@ -742,7 +808,7 @@ Synthesized by Trace Context Engine
                             <FolderSync className="w-4 h-4" />
                             <span>
                               {isBatchSyncing
-                                ? 'Syncing Folder...'
+                                ? 'Syncing Folder…'
                                 : `Sync Folder (${selectedDocIds.size} Docs)`}
                             </span>
                           </button>

@@ -76,6 +76,64 @@ app.post('/api/context/add', (req, res) => {
   res.json({ success: true, source: newSource });
 });
 
+app.post('/api/context/batch-add', (req, res) => {
+  const { sources } = req.body;
+  if (!Array.isArray(sources) || sources.length === 0) {
+    res.status(400).json({ error: 'Array of sources is required' });
+    return;
+  }
+
+  const addedSources: ContextSource[] = [];
+
+  for (const src of sources) {
+    if (!src.title || !src.summary) continue;
+
+    let resolvedUrl = src.url;
+    if (!resolvedUrl || resolvedUrl === 'https://docs.google.com' || resolvedUrl === 'https://docs.google.com/') {
+      if (src.metadata?.googleDocId) {
+        resolvedUrl = `https://docs.google.com/document/d/${src.metadata.googleDocId}/edit`;
+      } else if (src.type === 'github') {
+        resolvedUrl = 'https://github.com/org/repo';
+      } else if (src.type === 'calendar') {
+        resolvedUrl = 'https://calendar.google.com';
+      } else {
+        resolvedUrl = 'https://docs.google.com';
+      }
+    }
+
+    const docId = src.metadata?.googleDocId;
+    const existingIndex = customSources.findIndex(
+      s => (docId && s.metadata?.googleDocId === docId) || s.title === src.title
+    );
+
+    const newSource: ContextSource = {
+      id: existingIndex >= 0 ? customSources[existingIndex].id : `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      type: ['calendar', 'doc', 'github', 'incident'].includes(src.type) ? src.type : 'doc',
+      title: src.title,
+      date: src.date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      authorOrHost: src.authorOrHost || 'Dũng Trần Chí',
+      summary: src.summary,
+      details: src.details || src.summary,
+      url: resolvedUrl,
+      metadata: src.metadata || {}
+    };
+
+    if (existingIndex >= 0) {
+      customSources[existingIndex] = newSource;
+    } else {
+      customSources.unshift(newSource);
+    }
+    addedSources.push(newSource);
+  }
+
+  res.json({
+    success: true,
+    count: addedSources.length,
+    sources: addedSources,
+    totalSources: INITIAL_CONTEXT_SOURCES.length + customSources.length
+  });
+});
+
 app.post('/api/ask-why', async (req, res) => {
   try {
     const { question } = req.body;

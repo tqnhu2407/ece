@@ -7,7 +7,11 @@ import {
   Search, 
   HelpCircle,
   Layers,
-  FileText
+  FileText,
+  RefreshCw,
+  CheckCircle2,
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 
 interface MorningBriefViewProps {
@@ -15,6 +19,10 @@ interface MorningBriefViewProps {
   onAskWhy: (question: string) => void;
   onSelectDecision: (decisionId: string) => void;
   isAsking: boolean;
+  isSyncingContext?: boolean;
+  syncStatusMessage?: string | null;
+  lastSyncedNotice?: string | null;
+  onDismissSyncedNotice?: () => void;
 }
 
 const containerVariants = {
@@ -45,17 +53,22 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
   onAskWhy,
   onSelectDecision,
   isAsking,
+  isSyncingContext = false,
+  syncStatusMessage = null,
+  lastSyncedNotice = null,
+  onDismissSyncedNotice,
 }) => {
   const [query, setQuery] = useState('');
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
+    if (query.trim() && !isAsking && !isSyncingContext) {
       onAskWhy(query.trim());
     }
   };
 
   const handlePresetClick = (q: string) => {
+    if (isAsking || isSyncingContext) return;
     setQuery(q);
     onAskWhy(q);
   };
@@ -78,6 +91,37 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
         </p>
       </motion.div>
 
+      {/* Sync Readiness & Completion Notices */}
+      {isSyncingContext && (
+        <motion.div 
+          variants={itemVariants}
+          className="p-3 bg-[#0D1116] border border-blue-800/60 rounded-[8px] flex items-center justify-between text-[13px] text-blue-300 shadow-sm"
+        >
+          <div className="flex items-center space-x-2.5">
+            <RefreshCw className="w-4 h-4 animate-spin text-blue-400 shrink-0" />
+            <span className="font-semibold">{syncStatusMessage || 'Syncing Google Docs & updating Trace memory…'}</span>
+          </div>
+          <span className="text-[11px] text-blue-400/80 font-mono hidden sm:inline">
+            Ask Why will automatically unlock once memory sync completes
+          </span>
+        </motion.div>
+      )}
+
+      {lastSyncedNotice && !isSyncingContext && (
+        <motion.div 
+          variants={itemVariants}
+          className="p-3 bg-emerald-950/40 border border-emerald-800/60 rounded-[8px] flex items-center justify-between text-[13px] text-emerald-300 shadow-sm"
+        >
+          <div className="flex items-center space-x-2.5">
+            <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-semibold">{lastSyncedNotice}</span>
+          </div>
+          <span className="text-[11px] text-emerald-400/80 font-mono hidden sm:inline">
+            Ready to query in Ask Why
+          </span>
+        </motion.div>
+      )}
+
       {/* Ask Why Search Console */}
       <motion.div 
         variants={itemVariants} 
@@ -94,6 +138,13 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
               </h2>
             </div>
           </div>
+
+          {isSyncingContext && (
+            <div className="flex items-center space-x-1.5 text-[11px] font-mono text-blue-400 bg-blue-950/30 border border-blue-800/40 px-2.5 py-1 rounded-[6px]">
+              <RefreshCw className="w-3 h-3 animate-spin text-blue-400" />
+              <span>Sync in progress</span>
+            </div>
+          )}
         </div>
 
         {/* Input Bar */}
@@ -102,20 +153,30 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
             id="ask-why-input"
             type="text"
             value={query}
+            disabled={isAsking || isSyncingContext}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask why decisions were made."
-            className="w-full bg-[#020408] text-[#F9FEFF] placeholder-zinc-500 pl-12 pr-36 py-3.5 rounded-[8px] border border-[#21262d] focus:border-zinc-500 text-[14px] outline-none transition"
+            placeholder={
+              isSyncingContext
+                ? 'Updating Trace memory… (Ask Why will resume when ready)'
+                : 'Ask why decisions were made.'
+            }
+            className="w-full bg-[#020408] text-[#F9FEFF] placeholder-zinc-500 pl-12 pr-44 py-3.5 rounded-[8px] border border-[#21262d] focus:border-zinc-500 text-[14px] outline-none transition disabled:opacity-60 disabled:cursor-not-allowed"
           />
           <Search className="w-5 h-5 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           
           <button
             id="ask-why-submit-btn"
             type="submit"
-            disabled={isAsking || !query.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#F9FEFF] hover:bg-zinc-200 disabled:opacity-50 text-black text-[14px] font-semibold px-4 py-2 rounded-[8px] flex items-center space-x-2 transition cursor-pointer"
+            disabled={isAsking || isSyncingContext || !query.trim()}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#F9FEFF] hover:bg-zinc-200 disabled:opacity-50 text-black text-[14px] font-semibold px-4 py-2 rounded-[8px] flex items-center space-x-2 transition cursor-pointer disabled:cursor-not-allowed"
           >
             {isAsking ? (
               <span>Reconstructing...</span>
+            ) : isSyncingContext ? (
+              <span className="flex items-center space-x-1.5">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Updating memory…</span>
+              </span>
             ) : (
               <>
                 <span>Ask Why</span>
@@ -131,8 +192,9 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
             <button
               key={idx}
               id={`suggested-question-${idx}`}
+              disabled={isAsking || isSyncingContext}
               onClick={() => handlePresetClick(q)}
-              className="text-[12px] bg-[#020408] hover:bg-[#161b22] hover:text-white text-zinc-400 px-4 py-2 rounded-[8px] border border-[#21262d] hover:border-zinc-600 transition-all font-medium text-left cursor-pointer"
+              className="text-[12px] bg-[#020408] hover:bg-[#161b22] hover:text-white text-zinc-400 px-4 py-2 rounded-[8px] border border-[#21262d] hover:border-zinc-600 transition-all font-medium text-left cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {q}
             </button>
