@@ -59,6 +59,18 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
     cachedAccessToken = credential.accessToken;
     return { user: result.user, accessToken: cachedAccessToken };
   } catch (error: any) {
+    // If the user closed or dismissed the popup, handle gracefully without logging runtime errors
+    const isCancelled =
+      error?.code === 'auth/popup-closed-by-user' ||
+      error?.code === 'auth/cancelled-popup-request' ||
+      error?.code === 'auth/popup-blocked' ||
+      String(error?.message || '').includes('popup-closed-by-user') ||
+      String(error?.message || '').includes('cancelled-popup-request');
+
+    if (isCancelled) {
+      return null;
+    }
+
     console.error('Sign in error:', error);
     throw error;
   } finally {

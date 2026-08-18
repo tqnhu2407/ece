@@ -162,8 +162,16 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
         setIndividualDocs(docList);
       }
     } catch (err: any) {
-      console.error('Sign-in failed:', err);
-      setAuthError(err.message || 'Authentication failed');
+      const isCancelled =
+        err?.code === 'auth/popup-closed-by-user' ||
+        err?.code === 'auth/cancelled-popup-request' ||
+        String(err?.message || '').includes('popup-closed-by-user') ||
+        String(err?.message || '').includes('cancelled-popup-request');
+
+      if (!isCancelled) {
+        console.error('Sign-in failed:', err);
+        setAuthError(err.message || 'Authentication failed');
+      }
     } finally {
       setIsLoadingFolders(false);
     }

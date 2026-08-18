@@ -147,7 +147,7 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
         <div>
           <h2 className="text-[22px] font-bold text-[#F9FEFF] flex items-center space-x-2">
             <Clock className="w-5 h-5 text-zinc-400" />
-            <span>Decision Timeline</span>
+            <span>Context Timeline</span>
           </h2>
           <p className="text-[12px] text-zinc-400 mt-1">
             Reconstructed chronological sequence of events, reviews, and implementations. Click any item in the timeline to inspect its underlying evidence source.
