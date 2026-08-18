@@ -104,7 +104,7 @@ export const AskWhyResultView: React.FC<AskWhyResultViewProps> = ({
             className="flex items-center space-x-2 px-4 py-2 rounded-[8px] bg-[#0D1116] text-zinc-200 hover:bg-[#161b22] text-[12px] font-semibold border border-[#21262d] transition cursor-pointer"
           >
             <Share2 className="w-4 h-4 text-zinc-400" />
-            <span>{copied ? 'Copied!' : 'Copy Reasoning'}</span>
+            <span>{copied ? 'Copied!' : 'Copy Context'}</span>
           </button>
         </div>
       </div>
