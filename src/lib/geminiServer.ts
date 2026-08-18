@@ -179,7 +179,7 @@ function fallbackReasoningEngine(
     };
   }
 
-  // Dynamic matching across custom synced context sources (e.g. Google Docs)
+  // Dynamic matching across custom synced context sources (e.g. Google Docs, Google Calendar)
   const queryTokens = qLower.split(/\W+/).filter(t => t.length > 2);
   const matchedCustomSources = sources.filter(s => {
     const textToMatch = `${s.title} ${s.summary} ${s.details || ''}`.toLowerCase();
@@ -188,9 +188,16 @@ function fallbackReasoningEngine(
 
   if (matchedCustomSources.length > 0) {
     const primary = matchedCustomSources[0];
+    const sourceLabel =
+      primary.type === 'calendar'
+        ? 'Google Calendar event'
+        : primary.type === 'doc'
+        ? 'Google Doc'
+        : 'source';
+
     return {
       question,
-      answer: `Based on the latest synced ${primary.type === 'doc' ? 'Google Doc' : 'source'} "${primary.title}": ${primary.summary}`,
+      answer: `Based on the latest synced ${sourceLabel} "${primary.title}": ${primary.summary}`,
       confidence: 'High',
       confidenceReason: `Directly reconstructed from the freshly ingested artifact "${primary.title}" and associated team context.`,
       reasoningTimeline: [
@@ -198,7 +205,7 @@ function fallbackReasoningEngine(
           date: primary.date,
           title: `Context Reference: ${primary.title}`,
           description: primary.summary.slice(0, 180) + (primary.summary.length > 180 ? '...' : ''),
-          type: 'decision',
+          type: primary.type === 'calendar' ? 'review' : 'decision',
           sourceId: primary.id
         }
       ],

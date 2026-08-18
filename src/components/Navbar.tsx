@@ -1,11 +1,12 @@
 import React from 'react';
-import { BrainCircuit, BookOpen, Sparkles, FileText } from 'lucide-react';
+import { BrainCircuit, BookOpen, Sparkles, FileText, Calendar } from 'lucide-react';
 import { User } from 'firebase/auth';
 
 interface NavbarProps {
   activeTab: 'brief' | 'library';
   setActiveTab: (tab: 'brief' | 'library') => void;
   onOpenGoogleDocs: () => void;
+  onOpenGoogleCalendar: () => void;
   user: User | null;
   userName: string;
 }
@@ -14,6 +15,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   onOpenGoogleDocs,
+  onOpenGoogleCalendar,
   user,
   userName,
 }) => {
@@ -69,24 +71,35 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Right Actions & User Profile */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Google Docs Integration Quick Trigger */}
             <button
               id="google-docs-btn"
               onClick={onOpenGoogleDocs}
-              className="flex items-center space-x-2 bg-[#020408] hover:bg-[#161b22] text-zinc-200 text-[12px] font-semibold px-3 py-1.5 rounded-[8px] border border-[#21262d] transition cursor-pointer"
+              className="flex items-center space-x-1.5 bg-[#020408] hover:bg-[#161b22] text-zinc-200 text-[12px] font-semibold px-2.5 sm:px-3 py-1.5 rounded-[8px] border border-[#21262d] transition cursor-pointer"
               title="Browse, search, or sync Google Docs"
             >
               <FileText className="w-4 h-4 text-blue-400" />
-              <span className="hidden sm:inline">Google Docs</span>
+              <span className="hidden md:inline">Docs</span>
+            </button>
+
+            {/* Google Calendar Integration Quick Trigger */}
+            <button
+              id="google-calendar-btn"
+              onClick={onOpenGoogleCalendar}
+              className="flex items-center space-x-1.5 bg-[#020408] hover:bg-[#161b22] text-zinc-200 text-[12px] font-semibold px-2.5 sm:px-3 py-1.5 rounded-[8px] border border-[#21262d] transition cursor-pointer"
+              title="View, sync, or schedule Google Calendar meetings"
+            >
+              <Calendar className="w-4 h-4 text-amber-400" />
+              <span className="hidden md:inline">Calendar</span>
             </button>
 
             {/* User Avatar */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 pl-1">
               <div className="w-8 h-8 rounded-[8px] bg-[#020408] border border-[#21262d] flex items-center justify-center text-[12px] font-bold text-zinc-200">
                 {user?.displayName ? user.displayName.charAt(0) : userName.charAt(0)}
               </div>
-              <span className="text-[12px] font-medium text-zinc-400 hidden md:inline-block">
+              <span className="text-[12px] font-medium text-zinc-400 hidden lg:inline-block">
                 {user?.displayName || userName}
               </span>
             </div>

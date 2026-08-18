@@ -8,6 +8,7 @@ import { DecisionDetailView } from './components/DecisionDetailView';
 import { AddContextModal } from './components/AddContextModal';
 import { SourceDetailModal } from './components/SourceDetailModal';
 import { GoogleDocsModal } from './components/GoogleDocsModal';
+import { GoogleCalendarModal } from './components/GoogleCalendarModal';
 import { ContextSource, DecisionItem, MorningBriefData, ReasoningResult } from './types';
 import { INITIAL_MORNING_BRIEF } from './data/mockData';
 import { initAuth } from './lib/firebaseAuth';
@@ -36,6 +37,10 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isGoogleDocsOpen, setIsGoogleDocsOpen] = useState(false);
   const [exportingDecision, setExportingDecision] = useState<DecisionItem | null>(null);
+
+  // Google Calendar state
+  const [isGoogleCalendarOpen, setIsGoogleCalendarOpen] = useState(false);
+  const [schedulingDecision, setSchedulingDecision] = useState<DecisionItem | null>(null);
 
   // Initialize Firebase Auth listener on app load
   useEffect(() => {
@@ -209,6 +214,10 @@ export default function App() {
           setExportingDecision(null);
           setIsGoogleDocsOpen(true);
         }}
+        onOpenGoogleCalendar={() => {
+          setSchedulingDecision(null);
+          setIsGoogleCalendarOpen(true);
+        }}
         user={user}
         userName={user?.displayName || brief.user.name}
       />
@@ -255,6 +264,10 @@ export default function App() {
             onAskWhyAboutDecision={handleAskWhy}
             onSourceClick={(source) => setInspectSource(source)}
             onExportToGoogleDocs={handleStartExportDecision}
+            onScheduleReviewMeeting={(dec) => {
+              setSchedulingDecision(dec);
+              setIsGoogleCalendarOpen(true);
+            }}
           />
         )}
       </main>
@@ -283,6 +296,20 @@ export default function App() {
         onImportBatchDocsAsContext={handleImportBatchDocsAsContext}
         onSyncStatusUpdate={(status) => setSyncStatusMessage(status)}
         exportDecision={exportingDecision}
+      />
+
+      <GoogleCalendarModal
+        isOpen={isGoogleCalendarOpen}
+        onClose={() => {
+          setIsGoogleCalendarOpen(false);
+          setSchedulingDecision(null);
+        }}
+        user={user}
+        onUserAuthChange={(newUser) => setUser(newUser)}
+        onImportEventAsContext={handleImportDocAsContext}
+        onImportBatchEventsAsContext={handleImportBatchDocsAsContext}
+        onSyncStatusUpdate={(status) => setSyncStatusMessage(status)}
+        scheduleForDecision={schedulingDecision}
       />
 
       {/* Footer */}

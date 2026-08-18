@@ -20,6 +20,7 @@ interface DecisionDetailViewProps {
   onAskWhyAboutDecision: (question: string) => void;
   onSourceClick: (source: ContextSource) => void;
   onExportToGoogleDocs?: (decision: DecisionItem) => void;
+  onScheduleReviewMeeting?: (decision: DecisionItem) => void;
 }
 
 export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
@@ -28,6 +29,7 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
   onAskWhyAboutDecision,
   onSourceClick,
   onExportToGoogleDocs,
+  onScheduleReviewMeeting,
 }) => {
 
   const getSourceIcon = (type: ContextSource['type']) => {
@@ -72,7 +74,7 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8 animate-fadeIn">
       
       {/* Top Action Bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <button
           onClick={onBack}
           className="flex items-center space-x-2 text-[14px] font-semibold text-zinc-400 hover:text-[#5991F1] transition cursor-pointer"
@@ -81,16 +83,29 @@ export const DecisionDetailView: React.FC<DecisionDetailViewProps> = ({
           <span>Back to Decision Library</span>
         </button>
 
-        {onExportToGoogleDocs && (
-          <button
-            onClick={() => onExportToGoogleDocs(decision)}
-            className="flex items-center space-x-2 bg-[#0D1116] hover:bg-[#161b22] text-zinc-200 hover:text-white px-3.5 py-1.5 rounded-[8px] border border-[#21262d] text-[12px] font-semibold transition cursor-pointer"
-            title="Export this decision as an Architecture Decision Record (ADR) in Google Docs"
-          >
-            <FileText className="w-4 h-4 text-blue-400" />
-            <span>Export to Google Docs</span>
-          </button>
-        )}
+        <div className="flex items-center space-x-2">
+          {onScheduleReviewMeeting && (
+            <button
+              onClick={() => onScheduleReviewMeeting(decision)}
+              className="flex items-center space-x-2 bg-[#0D1116] hover:bg-[#161b22] text-zinc-200 hover:text-white px-3.5 py-1.5 rounded-[8px] border border-[#21262d] text-[12px] font-semibold transition cursor-pointer"
+              title="Schedule a team review meeting on Google Calendar"
+            >
+              <Calendar className="w-4 h-4 text-amber-400" />
+              <span>Schedule Review</span>
+            </button>
+          )}
+
+          {onExportToGoogleDocs && (
+            <button
+              onClick={() => onExportToGoogleDocs(decision)}
+              className="flex items-center space-x-2 bg-[#0D1116] hover:bg-[#161b22] text-zinc-200 hover:text-white px-3.5 py-1.5 rounded-[8px] border border-[#21262d] text-[12px] font-semibold transition cursor-pointer"
+              title="Export this decision as an Architecture Decision Record (ADR) in Google Docs"
+            >
+              <FileText className="w-4 h-4 text-blue-400" />
+              <span>Export to Docs</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Decision Header */}
