@@ -263,11 +263,12 @@ export default function App() {
   }
 
   // -------------------------------------------------------------
-  // STATE B: Authenticated user in Workspace Setup -> Setup Page
+  // AUTHENTICATED APP: Workspace Setup OR Main Application
+  // Modals are rendered once at the shared authenticated level
   // -------------------------------------------------------------
-  if (isInSetup) {
-    return (
-      <>
+  return (
+    <>
+      {isInSetup ? (
         <WorkspaceSetupView
           user={user}
           docsCount={docsCount}
@@ -292,116 +293,90 @@ export default function App() {
           syncStatusMessage={syncStatusMessage}
           lastSyncedNotice={lastSyncedNotice}
         />
-
-        {/* Sync Modals */}
-        <GoogleDocsModal
-          isOpen={isGoogleDocsOpen}
-          onClose={() => {
-            setIsGoogleDocsOpen(false);
-            setExportingDecision(null);
-          }}
-          user={user}
-          onUserAuthChange={(newUser) => setUser(newUser)}
-          onImportDocAsContext={handleImportDocAsContext}
-          onImportBatchDocsAsContext={handleImportBatchDocsAsContext}
-          onSyncStatusUpdate={(status) => setSyncStatusMessage(status)}
-          exportDecision={exportingDecision}
-        />
-
-        <GoogleCalendarModal
-          isOpen={isGoogleCalendarOpen}
-          onClose={() => {
-            setIsGoogleCalendarOpen(false);
-            setSchedulingDecision(null);
-          }}
-          user={user}
-          onUserAuthChange={(newUser) => setUser(newUser)}
-          onImportEventAsContext={handleImportCalendarEventAsContext}
-          onImportBatchEventsAsContext={handleImportBatchCalendarEventsAsContext}
-          onSyncStatusUpdate={(status) => setSyncStatusMessage(status)}
-          scheduleForDecision={schedulingDecision}
-        />
-      </>
-    );
-  }
-
-  // -------------------------------------------------------------
-  // STATE C: Authenticated user with synced context -> Main Application
-  // -------------------------------------------------------------
-  return (
-    <div className="min-h-screen bg-[#020408] text-[#F9FEFF] font-sans antialiased selection:bg-zinc-800 selection:text-white flex flex-col">
-      {/* Top Navbar */}
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={(tab) => {
-          setActiveTab(tab);
-          if (tab === 'brief') setCurrentView('brief');
-          else if (tab === 'library') {
-            if (!selectedDecision) setCurrentView('brief');
-          }
-        }}
-        onOpenGoogleDocs={() => {
-          setExportingDecision(null);
-          setIsGoogleDocsOpen(true);
-        }}
-        onOpenGoogleCalendar={() => {
-          setSchedulingDecision(null);
-          setIsGoogleCalendarOpen(true);
-        }}
-        onSignOut={handleSignOut}
-        user={user}
-        userName={user?.displayName || 'User'}
-        contextCount={contextSources.length}
-      />
-
-      {/* Main Content Area */}
-      <main className="flex-1 pb-16">
-        {activeTab === 'brief' && currentView === 'brief' && brief && (
-          <MorningBriefView
-            brief={brief}
-            onAskWhy={handleAskWhy}
-            onSelectDecision={handleSelectDecision}
-            isAsking={isAsking}
-            isSyncingContext={isSyncingContext}
-            syncStatusMessage={syncStatusMessage}
-            lastSyncedNotice={lastSyncedNotice}
-            onDismissSyncedNotice={() => setLastSyncedNotice(null)}
-            contextSourcesCount={contextSources.length}
-          />
-        )}
-
-        {currentView === 'ask-why-result' && reasoningResult && (
-          <AskWhyResultView
-            result={reasoningResult}
-            onBack={() => setCurrentView('brief')}
-            onSelectDecision={handleSelectDecision}
-            onSourceClick={(source) => setInspectSource(source)}
-          />
-        )}
-
-        {activeTab === 'library' && currentView !== 'decision-detail' && (
-          <DecisionLibraryView
-            decisions={decisions}
-            onSelectDecision={handleSelectDecision}
-          />
-        )}
-
-        {activeTab === 'library' && currentView === 'decision-detail' && selectedDecision && (
-          <DecisionDetailView
-            decision={selectedDecision}
-            onBack={() => setCurrentView('brief')}
-            onAskWhyAboutDecision={handleAskWhy}
-            onSourceClick={(source) => setInspectSource(source)}
-            onExportToGoogleDocs={handleStartExportDecision}
-            onScheduleReviewMeeting={(dec) => {
-              setSchedulingDecision(dec);
+      ) : (
+        <div className="min-h-screen bg-[#020408] text-[#F9FEFF] font-sans antialiased selection:bg-zinc-800 selection:text-white flex flex-col">
+          {/* Top Navbar */}
+          <Navbar
+            activeTab={activeTab}
+            setActiveTab={(tab) => {
+              setActiveTab(tab);
+              if (tab === 'brief') setCurrentView('brief');
+              else if (tab === 'library') {
+                if (!selectedDecision) setCurrentView('brief');
+              }
+            }}
+            onOpenGoogleDocs={() => {
+              setExportingDecision(null);
+              setIsGoogleDocsOpen(true);
+            }}
+            onOpenGoogleCalendar={() => {
+              setSchedulingDecision(null);
               setIsGoogleCalendarOpen(true);
             }}
+            onSignOut={handleSignOut}
+            user={user}
+            userName={user?.displayName || 'User'}
+            contextCount={contextSources.length}
           />
-        )}
-      </main>
 
-      {/* Modals */}
+          {/* Main Content Area */}
+          <main className="flex-1 pb-16">
+            {activeTab === 'brief' && currentView === 'brief' && brief && (
+              <MorningBriefView
+                brief={brief}
+                onAskWhy={handleAskWhy}
+                onSelectDecision={handleSelectDecision}
+                isAsking={isAsking}
+                isSyncingContext={isSyncingContext}
+                syncStatusMessage={syncStatusMessage}
+                lastSyncedNotice={lastSyncedNotice}
+                onDismissSyncedNotice={() => setLastSyncedNotice(null)}
+                contextSourcesCount={contextSources.length}
+              />
+            )}
+
+            {currentView === 'ask-why-result' && reasoningResult && (
+              <AskWhyResultView
+                result={reasoningResult}
+                onBack={() => setCurrentView('brief')}
+                onSelectDecision={handleSelectDecision}
+                onSourceClick={(source) => setInspectSource(source)}
+              />
+            )}
+
+            {activeTab === 'library' && currentView !== 'decision-detail' && (
+              <DecisionLibraryView
+                decisions={decisions}
+                onSelectDecision={handleSelectDecision}
+              />
+            )}
+
+            {activeTab === 'library' && currentView === 'decision-detail' && selectedDecision && (
+              <DecisionDetailView
+                decision={selectedDecision}
+                onBack={() => setCurrentView('brief')}
+                onAskWhyAboutDecision={handleAskWhy}
+                onSourceClick={(source) => setInspectSource(source)}
+                onExportToGoogleDocs={handleStartExportDecision}
+                onScheduleReviewMeeting={(dec) => {
+                  setSchedulingDecision(dec);
+                  setIsGoogleCalendarOpen(true);
+                }}
+              />
+            )}
+          </main>
+
+          {/* Footer */}
+          <footer className="border-t border-[#21262d] bg-[#020408] py-6">
+            <div className="max-w-7xl mx-auto px-4 text-center text-[12px] text-zinc-500 space-y-1">
+              <p className="font-semibold text-zinc-300 text-[12px]">Trace</p>
+              <p className="text-zinc-500 text-[12px]">Trace decisions. Preserve knowledge.</p>
+            </div>
+          </footer>
+        </div>
+      )}
+
+      {/* Shared Modals - Rendered once at the root authenticated level */}
       <AddContextModal
         isOpen={isAddContextOpen}
         onClose={() => setIsAddContextOpen(false)}
@@ -440,14 +415,6 @@ export default function App() {
         onSyncStatusUpdate={(status) => setSyncStatusMessage(status)}
         scheduleForDecision={schedulingDecision}
       />
-
-      {/* Footer */}
-      <footer className="border-t border-[#21262d] bg-[#020408] py-6">
-        <div className="max-w-7xl mx-auto px-4 text-center text-[12px] text-zinc-500 space-y-1">
-          <p className="font-semibold text-zinc-300 text-[12px]">Trace</p>
-          <p className="text-zinc-500 text-[12px]">Trace decisions. Preserve knowledge.</p>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }
