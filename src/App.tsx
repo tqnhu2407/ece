@@ -48,6 +48,9 @@ export default function App() {
   const [isGoogleCalendarOpen, setIsGoogleCalendarOpen] = useState(false);
   const [schedulingDecision, setSchedulingDecision] = useState<DecisionItem | null>(null);
 
+  // Explicit first-run setup state
+  const [isInSetup, setIsInSetup] = useState<boolean>(true);
+
   // Initialize Firebase Auth listener on app load
   useEffect(() => {
     const unsubscribe = initAuth(
@@ -105,6 +108,7 @@ export default function App() {
       const result = await googleSignIn();
       if (result) {
         setUser(result.user);
+        setIsInSetup(true);
         await refreshData(result.user.displayName || undefined);
       }
     } catch (err) {
@@ -119,6 +123,7 @@ export default function App() {
     try {
       await logout();
       setUser(null);
+      setIsInSetup(true);
       setContextSources([]);
       setDecisions([]);
       setBrief(null);
@@ -258,9 +263,9 @@ export default function App() {
   }
 
   // -------------------------------------------------------------
-  // STATE B: Authenticated user with 0 synced sources -> Setup Page
+  // STATE B: Authenticated user in Workspace Setup -> Setup Page
   // -------------------------------------------------------------
-  if (contextSources.length === 0) {
+  if (isInSetup) {
     return (
       <>
         <WorkspaceSetupView
@@ -278,6 +283,7 @@ export default function App() {
           }}
           onEnterTrace={() => {
             if (contextSources.length > 0) {
+              setIsInSetup(false);
               refreshData();
             }
           }}
