@@ -3,6 +3,7 @@ import { User } from 'firebase/auth';
 import { Navbar } from './components/Navbar';
 import { LandingView } from './components/LandingView';
 import { WorkspaceSetupView } from './components/WorkspaceSetupView';
+import { WorkspaceLoadingView } from './components/WorkspaceLoadingView';
 import { MorningBriefView } from './components/MorningBriefView';
 import { AskWhyResultView } from './components/AskWhyResultView';
 import { DecisionLibraryView } from './components/DecisionLibraryView';
@@ -48,8 +49,10 @@ export default function App() {
   const [isGoogleCalendarOpen, setIsGoogleCalendarOpen] = useState(false);
   const [schedulingDecision, setSchedulingDecision] = useState<DecisionItem | null>(null);
 
-  // Explicit first-run setup state
+  // Explicit first-run setup state and workspace initialization state
   const [isInSetup, setIsInSetup] = useState<boolean>(true);
+  const [isInitializingWorkspace, setIsInitializingWorkspace] = useState<boolean>(false);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
 
   // Initialize Firebase Auth listener on app load
   useEffect(() => {
@@ -124,6 +127,8 @@ export default function App() {
       await logout();
       setUser(null);
       setIsInSetup(true);
+      setIsInitializingWorkspace(false);
+      setInitializationError(null);
       setContextSources([]);
       setDecisions([]);
       setBrief(null);
@@ -131,6 +136,40 @@ export default function App() {
       setActiveTab('brief');
     } catch (err) {
       console.error('Sign out error:', err);
+    }
+  };
+
+  // Handle entering Trace with complete workspace initialization
+  const handleEnterTrace = async () => {
+    if (contextSources.length === 0) return;
+    setIsInitializingWorkspace(true);
+    setInitializationError(null);
+    try {
+      const [sourcesRes, decisionsRes] = await Promise.all([
+        fetch('/api/context-sources'),
+        fetch('/api/decisions')
+      ]);
+      const sourcesData: ContextSource[] = await sourcesRes.json();
+      const decisionsData: DecisionItem[] = await decisionsRes.json();
+      setContextSources(sourcesData);
+      setDecisions(decisionsData);
+
+      const uName = user?.displayName || 'Engineering Team';
+      const briefRes = await fetch(`/api/morning-brief?userName=${encodeURIComponent(uName)}`);
+      if (!briefRes.ok) {
+        throw new Error('Failed to generate Morning Brief');
+      }
+      const briefData = await briefRes.json();
+      if (!briefData || !briefData.summaryText) {
+        throw new Error('Empty brief data received');
+      }
+      setBrief(briefData);
+      setIsInSetup(false);
+      setIsInitializingWorkspace(false);
+    } catch (err: any) {
+      console.error('Failed to initialize workspace:', err);
+      setInitializationError('Trace was unable to generate your Morning Brief from connected sources.');
+      setIsInitializingWorkspace(false);
     }
   };
 
@@ -263,6 +302,66 @@ export default function App() {
   }
 
   // -------------------------------------------------------------
+  // INITIALIZATION STATE: Loading or Error during Enter Trace
+  // -------------------------------------------------------------
+  if (isInitializingWorkspace || initializationError) {
+    return (
+      <>
+        <WorkspaceLoadingView
+          isError={Boolean(initializationError)}
+          errorMessage={initializationError}
+          onRetry={handleEnterTrace}
+          onBackToSetup={() => {
+            setInitializationError(null);
+            setIsInitializingWorkspace(false);
+            setIsInSetup(true);
+          }}
+        />
+
+        {/* Shared Modals */}
+        <AddContextModal
+          isOpen={isAddContextOpen}
+          onClose={() => setIsAddContextOpen(false)}
+          onAdd={handleAddContext}
+        />
+
+        <SourceDetailModal
+          source={inspectSource}
+          onClose={() => setInspectSource(null)}
+        />
+
+        <GoogleDocsModal
+          isOpen={isGoogleDocsOpen}
+          onClose={() => {
+            setIsGoogleDocsOpen(false);
+            setExportingDecision(null);
+          }}
+          user={user}
+          onUserAuthChange={(newUser) => setUser(newUser)}
+          onImportDocAsContext={handleImportDocAsContext}
+          onImportBatchDocsAsContext={handleImportBatchDocsAsContext}
+          onSyncStatusUpdate={(status) => setSyncStatusMessage(status)}
+          exportDecision={exportingDecision}
+        />
+
+        <GoogleCalendarModal
+          isOpen={isGoogleCalendarOpen}
+          onClose={() => {
+            setIsGoogleCalendarOpen(false);
+            setSchedulingDecision(null);
+          }}
+          user={user}
+          onUserAuthChange={(newUser) => setUser(newUser)}
+          onImportEventAsContext={handleImportCalendarEventAsContext}
+          onImportBatchEventsAsContext={handleImportBatchCalendarEventsAsContext}
+          onSyncStatusUpdate={(status) => setSyncStatusMessage(status)}
+          scheduleForDecision={schedulingDecision}
+        />
+      </>
+    );
+  }
+
+  // -------------------------------------------------------------
   // AUTHENTICATED APP: Workspace Setup OR Main Application
   // Modals are rendered once at the shared authenticated level
   // -------------------------------------------------------------
@@ -282,12 +381,7 @@ export default function App() {
             setSchedulingDecision(null);
             setIsGoogleCalendarOpen(true);
           }}
-          onEnterTrace={() => {
-            if (contextSources.length > 0) {
-              setIsInSetup(false);
-              refreshData();
-            }
-          }}
+          onEnterTrace={handleEnterTrace}
           onSignOut={handleSignOut}
           isSyncing={isSyncingContext}
           syncStatusMessage={syncStatusMessage}
@@ -321,18 +415,34 @@ export default function App() {
 
           {/* Main Content Area */}
           <main className="flex-1 pb-16">
-            {activeTab === 'brief' && currentView === 'brief' && brief && (
-              <MorningBriefView
-                brief={brief}
-                onAskWhy={handleAskWhy}
-                onSelectDecision={handleSelectDecision}
-                isAsking={isAsking}
-                isSyncingContext={isSyncingContext}
-                syncStatusMessage={syncStatusMessage}
-                lastSyncedNotice={lastSyncedNotice}
-                onDismissSyncedNotice={() => setLastSyncedNotice(null)}
-                contextSourcesCount={contextSources.length}
-              />
+            {activeTab === 'brief' && currentView === 'brief' && (
+              brief ? (
+                <MorningBriefView
+                  brief={brief}
+                  onAskWhy={handleAskWhy}
+                  onSelectDecision={handleSelectDecision}
+                  isAsking={isAsking}
+                  isSyncingContext={isSyncingContext}
+                  syncStatusMessage={syncStatusMessage}
+                  lastSyncedNotice={lastSyncedNotice}
+                  onDismissSyncedNotice={() => setLastSyncedNotice(null)}
+                  contextSourcesCount={contextSources.length}
+                />
+              ) : (
+                <div className="max-w-2xl mx-auto px-4 py-16 text-center space-y-4">
+                  <h2 className="text-[20px] font-bold text-[#F9FEFF]">Morning Brief Unavailable</h2>
+                  <p className="text-[14px] text-zinc-400">
+                    Trace was unable to load your Morning Brief from connected sources.
+                  </p>
+                  <button
+                    id="retry-brief-main-btn"
+                    onClick={handleEnterTrace}
+                    className="px-6 py-2.5 bg-[#F9FEFF] text-black font-bold text-[13px] rounded-[8px] hover:bg-zinc-200 transition cursor-pointer"
+                  >
+                    Retry Morning Brief
+                  </button>
+                </div>
+              )
             )}
 
             {currentView === 'ask-why-result' && reasoningResult && (
