@@ -1,22 +1,20 @@
 import React, { useState } from 'react';
 import { DecisionItem } from '../types';
-import { Search, BookOpen, ArrowRight, Tag, Calendar, User, CheckCircle2, Clock, FileText } from 'lucide-react';
+import { Search, BookOpen, ArrowRight } from 'lucide-react';
 
 interface DecisionLibraryViewProps {
   decisions: DecisionItem[];
   onSelectDecision: (decisionId: string) => void;
-  onOpenGoogleDocs?: () => void;
 }
 
 export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
   decisions,
   onSelectDecision,
-  onOpenGoogleDocs,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
-  const categories = ['All', 'Architecture', 'Data Pipeline', 'AI / ML', 'API', 'Infrastructure'];
+  const categories = ['All', 'Product', 'Architecture', 'AI / ML', 'Data Pipeline', 'API', 'Infrastructure'];
 
   const filteredDecisions = decisions.filter((item) => {
     const matchesSearch =
@@ -51,19 +49,9 @@ export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
             Decision Library
           </h1>
           <p className="text-zinc-400 text-[14px] max-w-2xl font-normal">
-            Curated record of engineering architectural choices, rationale, and context timelines across your team.
+            Curated record of engineering and product architectural choices, rationale, and context timelines across your team.
           </p>
         </div>
-
-        {onOpenGoogleDocs && (
-          <button
-            onClick={onOpenGoogleDocs}
-            className="self-start sm:self-auto flex items-center space-x-2 bg-[#0D1116] hover:bg-[#161b22] text-zinc-200 hover:text-white px-4 py-2 rounded-[8px] border border-[#21262d] text-[12px] font-semibold transition cursor-pointer"
-          >
-            <FileText className="w-4 h-4 text-blue-400" />
-            <span>Import Google Doc</span>
-          </button>
-        )}
       </div>
 
       {/* Search & Filter Bar */}
@@ -106,13 +94,19 @@ export const DecisionLibraryView: React.FC<DecisionLibraryViewProps> = ({
 
         {filteredDecisions.length === 0 ? (
           <div className="bg-[#0D1116] rounded-[8px] p-8 text-center border border-[#21262d] space-y-4">
-            <p className="text-zinc-400 text-[14px]">No decisions found matching your filter criteria.</p>
-            <button
-              onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }}
-              className="text-[12px] font-bold text-[#5991F1] hover:underline cursor-pointer"
-            >
-              Clear filters
-            </button>
+            <p className="text-zinc-400 text-[14px]">
+              {decisions.length === 0
+                ? 'No curated decisions available yet. Sync Google Docs or Google Calendar to reconstruct decisions.'
+                : 'No decisions found matching your filter criteria.'}
+            </p>
+            {decisions.length > 0 && (
+              <button
+                onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }}
+                className="text-[12px] font-bold text-[#5991F1] hover:underline cursor-pointer"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

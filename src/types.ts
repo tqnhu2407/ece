@@ -23,7 +23,7 @@ export interface TimelineStep {
 export interface DecisionItem {
   id: string;
   title: string;
-  category: 'Architecture' | 'Infrastructure' | 'AI / ML' | 'Data Pipeline' | 'API';
+  category: 'Architecture' | 'Infrastructure' | 'AI / ML' | 'Data Pipeline' | 'API' | 'Product';
   date: string;
   author: string;
   status: 'Implemented' | 'Awaiting Implementation' | 'Under Review' | 'Deprecated';
@@ -48,12 +48,14 @@ export interface MorningBriefData {
     needsAttention: number;
   };
   summaryText: string;
+  supportingSourcesCount?: number;
   changes: Array<{
     id: string;
     title: string;
     category: string;
     impact: 'High' | 'Medium' | 'Low';
     decisionId?: string;
+    askQuestion?: string;
   }>;
   suggestedQuestions: string[];
 }

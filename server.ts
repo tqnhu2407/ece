@@ -1,34 +1,45 @@
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import { INITIAL_CONTEXT_SOURCES, INITIAL_DECISIONS, INITIAL_MORNING_BRIEF } from './src/data/mockData';
-import { reconstructReasoning } from './src/lib/geminiServer';
-import { ContextSource, DecisionItem } from './src/types';
+import {
+  getCuratedDecisionsFromSources,
+  reconstructReasoning,
+  generateDynamicMorningBrief
+} from './src/lib/geminiServer';
+import { ContextSource } from './src/types';
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 
-// In-memory runtime state (supports adding custom context sources)
+// In-memory runtime state for synced Google Workspace sources
 let customSources: ContextSource[] = [];
-let allDecisionsState: DecisionItem[] = [...INITIAL_DECISIONS];
 
 // API Routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', hasGeminiKey: !!process.env.GEMINI_API_KEY });
 });
 
-app.get('/api/brief', (req, res) => {
-  res.json(INITIAL_MORNING_BRIEF);
+app.get('/api/morning-brief', async (req, res) => {
+  try {
+    const userName = (req.query.userName as string) || 'Engineering Team';
+    const brief = await generateDynamicMorningBrief(customSources, userName);
+    res.json(brief);
+  } catch (err: any) {
+    console.error('Error generating morning brief:', err);
+    res.status(500).json({ error: err.message || 'Failed to generate morning brief' });
+  }
 });
 
 app.get('/api/decisions', (req, res) => {
-  res.json(allDecisionsState);
+  const curated = getCuratedDecisionsFromSources(customSources);
+  res.json(curated);
 });
 
 app.get('/api/decisions/:id', (req, res) => {
-  const decision = allDecisionsState.find(d => d.id === req.params.id);
+  const curated = getCuratedDecisionsFromSources(customSources);
+  const decision = curated.find((d) => d.id === req.params.id);
   if (!decision) {
     res.status(404).json({ error: 'Decision not found' });
     return;
@@ -37,7 +48,7 @@ app.get('/api/decisions/:id', (req, res) => {
 });
 
 app.get('/api/context-sources', (req, res) => {
-  res.json([...INITIAL_CONTEXT_SOURCES, ...customSources]);
+  res.json(customSources);
 });
 
 app.post('/api/context/add', (req, res) => {
@@ -65,14 +76,14 @@ app.post('/api/context/add', (req, res) => {
   const calendarEventId = metadata?.googleCalendarEventId;
   const docId = metadata?.googleDocId;
   const existingIndex = customSources.findIndex(
-    s =>
+    (s) =>
       (calendarEventId && s.metadata?.googleCalendarEventId === calendarEventId) ||
       (docId && s.metadata?.googleDocId === docId) ||
       s.title === title
   );
 
   const newSource: ContextSource = {
-    id: existingIndex >= 0 ? customSources[existingIndex].id : `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    id: existingIndex >= 0 ? customSources[existingIndex].id : `src-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     type: ['calendar', 'doc', 'github', 'incident'].includes(type) ? type : 'doc',
     title,
     date: date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -88,7 +99,7 @@ app.post('/api/context/add', (req, res) => {
   } else {
     customSources.unshift(newSource);
   }
-  res.json({ success: true, source: newSource });
+  res.json({ success: true, source: newSource, totalSources: customSources.length });
 });
 
 app.post('/api/context/batch-add', (req, res) => {
@@ -121,14 +132,14 @@ app.post('/api/context/batch-add', (req, res) => {
     const docId = src.metadata?.googleDocId;
     const calendarEventId = src.metadata?.googleCalendarEventId;
     const existingIndex = customSources.findIndex(
-      s =>
+      (s) =>
         (calendarEventId && s.metadata?.googleCalendarEventId === calendarEventId) ||
         (docId && s.metadata?.googleDocId === docId) ||
         s.title === src.title
     );
 
     const newSource: ContextSource = {
-      id: existingIndex >= 0 ? customSources[existingIndex].id : `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      id: existingIndex >= 0 ? customSources[existingIndex].id : `src-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       type: ['calendar', 'doc', 'github', 'incident'].includes(src.type) ? src.type : 'doc',
       title: src.title,
       date: src.date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -151,7 +162,7 @@ app.post('/api/context/batch-add', (req, res) => {
     success: true,
     count: addedSources.length,
     sources: addedSources,
-    totalSources: INITIAL_CONTEXT_SOURCES.length + customSources.length
+    totalSources: customSources.length
   });
 });
 
@@ -163,13 +174,13 @@ app.post('/api/ask-why', async (req, res) => {
       return;
     }
 
-    // Ensure server-side customSources is reconciled with any client-supplied context
+    // Reconcile server state with client-supplied context if any
     if (Array.isArray(clientContextSources) && clientContextSources.length > 0) {
       for (const clientSrc of clientContextSources) {
         const calId = clientSrc.metadata?.googleCalendarEventId;
         const dId = clientSrc.metadata?.googleDocId;
         const exists = customSources.some(
-          s =>
+          (s) =>
             s.id === clientSrc.id ||
             (calId && s.metadata?.googleCalendarEventId === calId) ||
             (dId && s.metadata?.googleDocId === dId) ||
@@ -199,7 +210,7 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    app.get('*all', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

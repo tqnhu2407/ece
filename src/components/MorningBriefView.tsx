@@ -7,11 +7,8 @@ import {
   Search, 
   HelpCircle,
   Layers,
-  FileText,
   RefreshCw,
-  CheckCircle2,
   CheckCircle,
-  Clock
 } from 'lucide-react';
 
 interface MorningBriefViewProps {
@@ -23,6 +20,7 @@ interface MorningBriefViewProps {
   syncStatusMessage?: string | null;
   lastSyncedNotice?: string | null;
   onDismissSyncedNotice?: () => void;
+  contextSourcesCount?: number;
 }
 
 const containerVariants = {
@@ -57,6 +55,7 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
   syncStatusMessage = null,
   lastSyncedNotice = null,
   onDismissSyncedNotice,
+  contextSourcesCount = 0,
 }) => {
   const [query, setQuery] = useState('');
 
@@ -72,6 +71,8 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
     setQuery(q);
     onAskWhy(q);
   };
+
+  const supportingCount = brief.supportingSourcesCount || contextSourcesCount || 1;
 
   return (
     <motion.div 
@@ -99,7 +100,7 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
         >
           <div className="flex items-center space-x-2.5">
             <RefreshCw className="w-4 h-4 animate-spin text-blue-400 shrink-0" />
-            <span className="font-semibold">{syncStatusMessage || 'Syncing Google Docs & updating Trace memory…'}</span>
+            <span className="font-semibold">{syncStatusMessage || 'Syncing workspace & updating Trace memory…'}</span>
           </div>
           <span className="text-[11px] text-blue-400/80 font-mono hidden sm:inline">
             Ask Why will automatically unlock once memory sync completes
@@ -187,19 +188,21 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
         </form>
 
         {/* Suggested Prompt Chips */}
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          {brief.suggestedQuestions.map((q, idx) => (
-            <button
-              key={idx}
-              id={`suggested-question-${idx}`}
-              disabled={isAsking || isSyncingContext}
-              onClick={() => handlePresetClick(q)}
-              className="text-[12px] bg-[#020408] hover:bg-[#161b22] hover:text-white text-zinc-400 px-4 py-2 rounded-[8px] border border-[#21262d] hover:border-zinc-600 transition-all font-medium text-left cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {q}
-            </button>
-          ))}
-        </div>
+        {brief.suggestedQuestions && brief.suggestedQuestions.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {brief.suggestedQuestions.map((q, idx) => (
+              <button
+                key={idx}
+                id={`suggested-question-${idx}`}
+                disabled={isAsking || isSyncingContext}
+                onClick={() => handlePresetClick(q)}
+                className="text-[12px] bg-[#020408] hover:bg-[#161b22] hover:text-white text-zinc-400 px-4 py-2 rounded-[8px] border border-[#21262d] hover:border-zinc-600 transition-all font-medium text-left cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
       </motion.div>
 
       {/* 2-COLUMN GRID FOR BRIEF SUMMARY & WHAT CHANGED */}
@@ -225,7 +228,7 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
           </div>
 
           <div className="mt-6 pt-4 border-t border-[#21262d] flex items-center justify-between text-[12px] text-zinc-500">
-            <span>Aggregated from 4 context sources</span>
+            <span>Aggregated from {supportingCount} context {supportingCount === 1 ? 'source' : 'sources'}</span>
             <span className="text-zinc-500 font-mono">Updated today</span>
           </div>
         </motion.div>
@@ -255,7 +258,15 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
               {brief.changes.map((item) => (
                 <div
                   key={item.id}
-                  onClick={() => item.decisionId && onSelectDecision(item.decisionId)}
+                  onClick={() => {
+                    if (item.decisionId) {
+                      onSelectDecision(item.decisionId);
+                    } else if (item.askQuestion) {
+                      onAskWhy(item.askQuestion);
+                    } else {
+                      onAskWhy(`What changed regarding ${item.title}?`);
+                    }
+                  }}
                   className="flex items-center justify-between p-3 rounded-[8px] border border-[#21262d] bg-[#020408] hover:border-zinc-600 hover:bg-[#161b22] transition cursor-pointer group"
                 >
                   <div className="flex items-center min-w-0 pr-2">
@@ -276,7 +287,7 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
           </div>
 
           <p className="text-[12px] text-zinc-500 text-center pt-3 border-t border-[#21262d]">
-            Click any item to view full decision rationale
+            Open an update to inspect its context.
           </p>
         </motion.div>
 
@@ -285,4 +296,3 @@ export const MorningBriefView: React.FC<MorningBriefViewProps> = ({
     </motion.div>
   );
 };
-

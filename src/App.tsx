@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { Navbar } from './components/Navbar';
+import { LandingView } from './components/LandingView';
+import { WorkspaceSetupView } from './components/WorkspaceSetupView';
 import { MorningBriefView } from './components/MorningBriefView';
 import { AskWhyResultView } from './components/AskWhyResultView';
 import { DecisionLibraryView } from './components/DecisionLibraryView';
@@ -10,8 +12,7 @@ import { SourceDetailModal } from './components/SourceDetailModal';
 import { GoogleDocsModal } from './components/GoogleDocsModal';
 import { GoogleCalendarModal } from './components/GoogleCalendarModal';
 import { ContextSource, DecisionItem, MorningBriefData, ReasoningResult } from './types';
-import { INITIAL_MORNING_BRIEF } from './data/mockData';
-import { initAuth } from './lib/firebaseAuth';
+import { initAuth, googleSignIn, logout } from './lib/firebaseAuth';
 import {
   executeSingleContextIngestion,
   executeBatchContextIngestion,
@@ -21,7 +22,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'brief' | 'library'>('brief');
   const [currentView, setCurrentView] = useState<'brief' | 'ask-why-result' | 'decision-detail'>('brief');
 
-  const [brief, setBrief] = useState<MorningBriefData>(INITIAL_MORNING_BRIEF);
+  const [brief, setBrief] = useState<MorningBriefData | null>(null);
   const [decisions, setDecisions] = useState<DecisionItem[]>([]);
   const [contextSources, setContextSources] = useState<ContextSource[]>([]);
   
@@ -39,6 +40,7 @@ export default function App() {
   
   // Google Docs & Workspace state
   const [user, setUser] = useState<User | null>(null);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const [isGoogleDocsOpen, setIsGoogleDocsOpen] = useState(false);
   const [exportingDecision, setExportingDecision] = useState<DecisionItem | null>(null);
 
@@ -61,18 +63,71 @@ export default function App() {
     };
   }, []);
 
-  // Fetch initial data from Express backend API
-  useEffect(() => {
-    fetch('/api/decisions')
-      .then((res) => res.json())
-      .then((data) => setDecisions(data))
-      .catch((err) => console.error('Failed to load decisions:', err));
+  // Fetch context sources & decisions from Express backend API
+  const refreshData = useCallback(async (currentUserName?: string) => {
+    try {
+      const [sourcesRes, decisionsRes] = await Promise.all([
+        fetch('/api/context-sources'),
+        fetch('/api/decisions')
+      ]);
+      const sourcesData: ContextSource[] = await sourcesRes.json();
+      const decisionsData: DecisionItem[] = await decisionsRes.json();
+      setContextSources(sourcesData);
+      setDecisions(decisionsData);
 
-    fetch('/api/context-sources')
-      .then((res) => res.json())
-      .then((data) => setContextSources(data))
-      .catch((err) => console.error('Failed to load context sources:', err));
-  }, []);
+      if (sourcesData.length > 0) {
+        const uName = currentUserName || user?.displayName || 'Engineering Team';
+        const briefRes = await fetch(`/api/morning-brief?userName=${encodeURIComponent(uName)}`);
+        if (briefRes.ok) {
+          const briefData = await briefRes.json();
+          if (briefData) {
+            setBrief(briefData);
+          }
+        }
+      } else {
+        setBrief(null);
+      }
+    } catch (err) {
+      console.error('Failed to load workspace data:', err);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      refreshData(user.displayName || undefined);
+    }
+  }, [user, refreshData]);
+
+  // Handle Google Sign In from Landing View
+  const handleGoogleSignIn = async () => {
+    setIsSigningIn(true);
+    try {
+      const result = await googleSignIn();
+      if (result) {
+        setUser(result.user);
+        await refreshData(result.user.displayName || undefined);
+      }
+    } catch (err) {
+      console.error('Google Sign In failed:', err);
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  // Handle Sign Out
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      setUser(null);
+      setContextSources([]);
+      setDecisions([]);
+      setBrief(null);
+      setCurrentView('brief');
+      setActiveTab('brief');
+    } catch (err) {
+      console.error('Sign out error:', err);
+    }
+  };
 
   // Handle Ask Why natural language query
   const handleAskWhy = async (question: string) => {
@@ -118,6 +173,7 @@ export default function App() {
       const data = await res.json();
       if (data.source) {
         setContextSources((prev) => [data.source, ...prev]);
+        await refreshData();
       }
     } catch (err) {
       console.error('Failed to add context source:', err);
@@ -126,50 +182,58 @@ export default function App() {
 
   // Handle single Google Doc import directly into Trace
   const handleImportDocAsContext = async (docSourceData: Omit<ContextSource, 'id'>) => {
-    return executeSingleContextIngestion(docSourceData, {
+    const result = await executeSingleContextIngestion(docSourceData, {
       sourceType: 'doc',
       onStatusUpdate: (status) => setSyncStatusMessage(status),
       onSetSyncingState: (syncing) => setIsSyncingContext(syncing),
       onSetNotice: (notice) => setLastSyncedNotice(notice),
       onUpdateContextStore: (updated) => setContextSources(updated),
     });
+    await refreshData();
+    return result;
   };
 
   // Handle batch Google Docs import directly into Trace
   const handleImportBatchDocsAsContext = async (
     docsSourceData: Array<Omit<ContextSource, 'id'>>
   ): Promise<{ count: number; totalSources: number; isVerified: boolean }> => {
-    return executeBatchContextIngestion(docsSourceData, {
+    const result = await executeBatchContextIngestion(docsSourceData, {
       sourceType: 'doc',
       onStatusUpdate: (status) => setSyncStatusMessage(status),
       onSetSyncingState: (syncing) => setIsSyncingContext(syncing),
       onSetNotice: (notice) => setLastSyncedNotice(notice),
       onUpdateContextStore: (updated) => setContextSources(updated),
     });
+    await refreshData();
+    return result;
   };
 
   // Handle single Google Calendar event import directly into Trace
   const handleImportCalendarEventAsContext = async (eventSourceData: Omit<ContextSource, 'id'>) => {
-    return executeSingleContextIngestion(eventSourceData, {
+    const result = await executeSingleContextIngestion(eventSourceData, {
       sourceType: 'calendar',
       onStatusUpdate: (status) => setSyncStatusMessage(status),
       onSetSyncingState: (syncing) => setIsSyncingContext(syncing),
       onSetNotice: (notice) => setLastSyncedNotice(notice),
       onUpdateContextStore: (updated) => setContextSources(updated),
     });
+    await refreshData();
+    return result;
   };
 
   // Handle batch Google Calendar events import directly into Trace
   const handleImportBatchCalendarEventsAsContext = async (
     eventsSourceData: Array<Omit<ContextSource, 'id'>>
   ): Promise<{ count: number; totalSources: number; isVerified: boolean }> => {
-    return executeBatchContextIngestion(eventsSourceData, {
+    const result = await executeBatchContextIngestion(eventsSourceData, {
       sourceType: 'calendar',
       onStatusUpdate: (status) => setSyncStatusMessage(status),
       onSetSyncingState: (syncing) => setIsSyncingContext(syncing),
       onSetNotice: (notice) => setLastSyncedNotice(notice),
       onUpdateContextStore: (updated) => setContextSources(updated),
     });
+    await refreshData();
+    return result;
   };
 
   // Handle export decision to Google Doc
@@ -178,6 +242,86 @@ export default function App() {
     setIsGoogleDocsOpen(true);
   };
 
+  const docsCount = contextSources.filter((s) => s.type === 'doc').length;
+  const calendarCount = contextSources.filter((s) => s.type === 'calendar').length;
+
+  // -------------------------------------------------------------
+  // STATE A: Unauthenticated user -> Minimal Landing Page
+  // -------------------------------------------------------------
+  if (!user) {
+    return (
+      <LandingView
+        onSignIn={handleGoogleSignIn}
+        isLoading={isSigningIn}
+      />
+    );
+  }
+
+  // -------------------------------------------------------------
+  // STATE B: Authenticated user with 0 synced sources -> Setup Page
+  // -------------------------------------------------------------
+  if (contextSources.length === 0) {
+    return (
+      <>
+        <WorkspaceSetupView
+          user={user}
+          docsCount={docsCount}
+          calendarCount={calendarCount}
+          totalContextCount={contextSources.length}
+          onOpenGoogleDocs={() => {
+            setExportingDecision(null);
+            setIsGoogleDocsOpen(true);
+          }}
+          onOpenGoogleCalendar={() => {
+            setSchedulingDecision(null);
+            setIsGoogleCalendarOpen(true);
+          }}
+          onEnterTrace={() => {
+            if (contextSources.length > 0) {
+              refreshData();
+            }
+          }}
+          onSignOut={handleSignOut}
+          isSyncing={isSyncingContext}
+          syncStatusMessage={syncStatusMessage}
+          lastSyncedNotice={lastSyncedNotice}
+        />
+
+        {/* Sync Modals */}
+        <GoogleDocsModal
+          isOpen={isGoogleDocsOpen}
+          onClose={() => {
+            setIsGoogleDocsOpen(false);
+            setExportingDecision(null);
+          }}
+          user={user}
+          onUserAuthChange={(newUser) => setUser(newUser)}
+          onImportDocAsContext={handleImportDocAsContext}
+          onImportBatchDocsAsContext={handleImportBatchDocsAsContext}
+          onSyncStatusUpdate={(status) => setSyncStatusMessage(status)}
+          exportDecision={exportingDecision}
+        />
+
+        <GoogleCalendarModal
+          isOpen={isGoogleCalendarOpen}
+          onClose={() => {
+            setIsGoogleCalendarOpen(false);
+            setSchedulingDecision(null);
+          }}
+          user={user}
+          onUserAuthChange={(newUser) => setUser(newUser)}
+          onImportEventAsContext={handleImportCalendarEventAsContext}
+          onImportBatchEventsAsContext={handleImportBatchCalendarEventsAsContext}
+          onSyncStatusUpdate={(status) => setSyncStatusMessage(status)}
+          scheduleForDecision={schedulingDecision}
+        />
+      </>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // STATE C: Authenticated user with synced context -> Main Application
+  // -------------------------------------------------------------
   return (
     <div className="min-h-screen bg-[#020408] text-[#F9FEFF] font-sans antialiased selection:bg-zinc-800 selection:text-white flex flex-col">
       {/* Top Navbar */}
@@ -187,7 +331,7 @@ export default function App() {
           setActiveTab(tab);
           if (tab === 'brief') setCurrentView('brief');
           else if (tab === 'library') {
-            if (!selectedDecision) setCurrentView('brief'); // Default to library list
+            if (!selectedDecision) setCurrentView('brief');
           }
         }}
         onOpenGoogleDocs={() => {
@@ -198,13 +342,15 @@ export default function App() {
           setSchedulingDecision(null);
           setIsGoogleCalendarOpen(true);
         }}
+        onSignOut={handleSignOut}
         user={user}
-        userName={user?.displayName || brief.user.name}
+        userName={user?.displayName || 'User'}
+        contextCount={contextSources.length}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 pb-16">
-        {activeTab === 'brief' && currentView === 'brief' && (
+        {activeTab === 'brief' && currentView === 'brief' && brief && (
           <MorningBriefView
             brief={brief}
             onAskWhy={handleAskWhy}
@@ -214,6 +360,7 @@ export default function App() {
             syncStatusMessage={syncStatusMessage}
             lastSyncedNotice={lastSyncedNotice}
             onDismissSyncedNotice={() => setLastSyncedNotice(null)}
+            contextSourcesCount={contextSources.length}
           />
         )}
 
@@ -230,10 +377,6 @@ export default function App() {
           <DecisionLibraryView
             decisions={decisions}
             onSelectDecision={handleSelectDecision}
-            onOpenGoogleDocs={() => {
-              setExportingDecision(null);
-              setIsGoogleDocsOpen(true);
-            }}
           />
         )}
 
@@ -302,4 +445,3 @@ export default function App() {
     </div>
   );
 }
-
