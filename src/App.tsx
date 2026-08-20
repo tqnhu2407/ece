@@ -98,11 +98,31 @@ export default function App() {
     }
   }, [user]);
 
+  // Load only sources and decisions during setup without heavy Morning Brief generation
+  const loadInitialSources = useCallback(async () => {
+    try {
+      const [sourcesRes, decisionsRes] = await Promise.all([
+        fetch('/api/context-sources'),
+        fetch('/api/decisions')
+      ]);
+      const sourcesData: ContextSource[] = await sourcesRes.json();
+      const decisionsData: DecisionItem[] = await decisionsRes.json();
+      setContextSources(sourcesData);
+      setDecisions(decisionsData);
+    } catch (err) {
+      console.error('Failed to load initial context sources:', err);
+    }
+  }, []);
+
   useEffect(() => {
     if (user) {
-      refreshData(user.displayName || undefined);
+      if (isInSetup) {
+        loadInitialSources();
+      } else {
+        refreshData(user.displayName || undefined);
+      }
     }
-  }, [user, refreshData]);
+  }, [user, isInSetup, loadInitialSources, refreshData]);
 
   // Handle Google Sign In from Landing View
   const handleGoogleSignIn = async () => {
@@ -112,7 +132,7 @@ export default function App() {
       if (result) {
         setUser(result.user);
         setIsInSetup(true);
-        await refreshData(result.user.displayName || undefined);
+        await loadInitialSources();
       }
     } catch (err) {
       console.error('Google Sign In failed:', err);
@@ -217,7 +237,9 @@ export default function App() {
       const data = await res.json();
       if (data.source) {
         setContextSources((prev) => [data.source, ...prev]);
-        await refreshData();
+        if (!isInSetup) {
+          await refreshData();
+        }
       }
     } catch (err) {
       console.error('Failed to add context source:', err);
@@ -233,7 +255,9 @@ export default function App() {
       onSetNotice: (notice) => setLastSyncedNotice(notice),
       onUpdateContextStore: (updated) => setContextSources(updated),
     });
-    await refreshData();
+    if (!isInSetup) {
+      await refreshData();
+    }
     return result;
   };
 
@@ -248,7 +272,9 @@ export default function App() {
       onSetNotice: (notice) => setLastSyncedNotice(notice),
       onUpdateContextStore: (updated) => setContextSources(updated),
     });
-    await refreshData();
+    if (!isInSetup) {
+      await refreshData();
+    }
     return result;
   };
 
@@ -261,7 +287,9 @@ export default function App() {
       onSetNotice: (notice) => setLastSyncedNotice(notice),
       onUpdateContextStore: (updated) => setContextSources(updated),
     });
-    await refreshData();
+    if (!isInSetup) {
+      await refreshData();
+    }
     return result;
   };
 
@@ -276,7 +304,9 @@ export default function App() {
       onSetNotice: (notice) => setLastSyncedNotice(notice),
       onUpdateContextStore: (updated) => setContextSources(updated),
     });
-    await refreshData();
+    if (!isInSetup) {
+      await refreshData();
+    }
     return result;
   };
 
