@@ -54,22 +54,17 @@ export default function App() {
   const [isInitializingWorkspace, setIsInitializingWorkspace] = useState<boolean>(false);
   const [initializationError, setInitializationError] = useState<string | null>(null);
 
-  // Initialize Firebase Auth listener on app load
+  // Auto-dismiss temporary sync success notification after ~4.5 seconds in Main App
   useEffect(() => {
-    const unsubscribe = initAuth(
-      (authenticatedUser) => {
-        setUser(authenticatedUser);
-      },
-      () => {
-        setUser(null);
-      }
-    );
-    return () => {
-      if (typeof unsubscribe === 'function') unsubscribe();
-    };
-  }, []);
+    if (lastSyncedNotice && !isInSetup) {
+      const timer = setTimeout(() => {
+        setLastSyncedNotice(null);
+      }, 4500);
+      return () => clearTimeout(timer);
+    }
+  }, [lastSyncedNotice, isInSetup]);
 
-  // Fetch context sources & decisions from Express backend API
+  // Fetch context sources & decisions from Express backend API (for Main App sync updates)
   const refreshData = useCallback(async (currentUserName?: string) => {
     try {
       const [sourcesRes, decisionsRes] = await Promise.all([
@@ -98,8 +93,8 @@ export default function App() {
     }
   }, [user]);
 
-  // Load only sources and decisions during setup without heavy Morning Brief generation
-  const loadInitialSources = useCallback(async () => {
+  // Determine first-time vs returning user and initialize workspace
+  const initializeUserWorkspace = useCallback(async (authenticatedUser: User) => {
     try {
       const [sourcesRes, decisionsRes] = await Promise.all([
         fetch('/api/context-sources'),
@@ -109,20 +104,55 @@ export default function App() {
       const decisionsData: DecisionItem[] = await decisionsRes.json();
       setContextSources(sourcesData);
       setDecisions(decisionsData);
-    } catch (err) {
-      console.error('Failed to load initial context sources:', err);
+
+      if (sourcesData.length > 0) {
+        // Returning user with existing context sources -> initialize workspace directly
+        setIsInSetup(false);
+        setIsInitializingWorkspace(true);
+        setLastSyncedNotice(null);
+        setInitializationError(null);
+
+        const uName = authenticatedUser.displayName || 'Engineering Team';
+        const briefRes = await fetch(`/api/morning-brief?userName=${encodeURIComponent(uName)}`);
+        if (!briefRes.ok) {
+          throw new Error('Failed to generate Morning Brief');
+        }
+        const briefData = await briefRes.json();
+        if (!briefData || !briefData.summaryText) {
+          throw new Error('Empty brief data received');
+        }
+        setBrief(briefData);
+        setIsInitializingWorkspace(false);
+      } else {
+        // First-time user with zero context sources -> show Workspace Setup
+        setIsInSetup(true);
+        setBrief(null);
+        setIsInitializingWorkspace(false);
+      }
+    } catch (err: any) {
+      console.error('Failed to initialize user workspace:', err);
+      setInitializationError('Trace was unable to generate your Morning Brief from connected sources.');
+      setIsInitializingWorkspace(false);
     }
   }, []);
 
+  // Initialize Firebase Auth listener on app load
   useEffect(() => {
-    if (user) {
-      if (isInSetup) {
-        loadInitialSources();
-      } else {
-        refreshData(user.displayName || undefined);
+    const unsubscribe = initAuth(
+      (authenticatedUser) => {
+        setUser(authenticatedUser);
+        initializeUserWorkspace(authenticatedUser);
+      },
+      () => {
+        setUser(null);
+        setIsInSetup(true);
+        setIsInitializingWorkspace(false);
       }
-    }
-  }, [user, isInSetup, loadInitialSources, refreshData]);
+    );
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [initializeUserWorkspace]);
 
   // Handle Google Sign In from Landing View
   const handleGoogleSignIn = async () => {
@@ -131,8 +161,7 @@ export default function App() {
       const result = await googleSignIn();
       if (result) {
         setUser(result.user);
-        setIsInSetup(true);
-        await loadInitialSources();
+        await initializeUserWorkspace(result.user);
       }
     } catch (err) {
       console.error('Google Sign In failed:', err);

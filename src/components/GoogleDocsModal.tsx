@@ -95,6 +95,7 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
   const [singleImportSuccess, setSingleImportSuccess] = useState(false);
 
   const [authError, setAuthError] = useState<string | null>(null);
+  const [hasToken, setHasToken] = useState<boolean>(true);
 
   // Export flow states
   const [isExporting, setIsExporting] = useState(false);
@@ -112,15 +113,29 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
       } else {
         setShowExportConfirmation(false);
       }
-      loadFoldersList();
-      loadIndividualDocsList();
+      checkTokenAndLoad();
     }
   }, [isOpen, exportDecision]);
 
-  const loadFoldersList = async () => {
+  const checkTokenAndLoad = async () => {
     const token = await getAccessToken();
-    if (!token) return;
+    if (!token) {
+      setHasToken(false);
+      return;
+    }
+    setHasToken(true);
+    loadFoldersList(token);
+    loadIndividualDocsList(token);
+  };
 
+  const loadFoldersList = async (providedToken?: string) => {
+    const token = providedToken || await getAccessToken();
+    if (!token) {
+      setHasToken(false);
+      return;
+    }
+
+    setHasToken(true);
     setIsLoadingFolders(true);
     setAuthError(null);
     try {
@@ -134,10 +149,14 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
     }
   };
 
-  const loadIndividualDocsList = async () => {
-    const token = await getAccessToken();
-    if (!token) return;
+  const loadIndividualDocsList = async (providedToken?: string) => {
+    const token = providedToken || await getAccessToken();
+    if (!token) {
+      setHasToken(false);
+      return;
+    }
 
+    setHasToken(true);
     setIsLoadingIndividualDocs(true);
     try {
       const list = await listGoogleDocs(token, docSearchQuery);
@@ -155,6 +174,7 @@ export const GoogleDocsModal: React.FC<GoogleDocsModalProps> = ({
       const res = await googleSignIn();
       if (res?.user) {
         onUserAuthChange(res.user);
+        setHasToken(true);
         setIsLoadingFolders(true);
         const folderList = await listGoogleDriveFolders(res.accessToken, folderSearchQuery);
         setFolders(folderList);
@@ -508,13 +528,13 @@ Synthesized by Trace Context Engine
           </div>
         )}
 
-        {/* Not Logged In State */}
-        {!user ? (
+        {/* Not Logged In or Token Needs Authorization State */}
+        {!user || !hasToken ? (
           <div className="p-8 bg-[#020408] rounded-[8px] border border-[#21262d] text-center space-y-4 my-4">
             <div className="max-w-md mx-auto space-y-2">
               <Sparkles className="w-6 h-6 text-zinc-400 mx-auto" />
               <h3 className="text-[16px] font-bold text-[#F9FEFF]">
-                Connect your Google Workspace
+                {user ? 'Authorize Google Workspace' : 'Connect your Google Workspace'}
               </h3>
               <p className="text-[13px] text-zinc-400">
                 Grant Trace permission to access your Google Drive folders and Docs to sync engineering context automatically.
@@ -533,7 +553,7 @@ Synthesized by Trace Context Engine
                   <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
                   <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
                 </svg>
-                <span>{isLoadingFolders ? 'Connecting...' : 'Sign in with Google'}</span>
+                <span>{isLoadingFolders ? 'Connecting...' : user ? 'Authorize Google Workspace' : 'Sign in with Google'}</span>
               </button>
             </div>
           </div>

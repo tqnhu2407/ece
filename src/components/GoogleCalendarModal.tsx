@@ -108,6 +108,7 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
 
   // Auth / general error state
   const [authError, setAuthError] = useState<string | null>(null);
+  const [hasToken, setHasToken] = useState<boolean>(true);
 
   // Reset or initialize when modal opens or decision changes
   useEffect(() => {
@@ -132,21 +133,35 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
         setScheduleDate(today.toISOString().split('T')[0]);
       }
 
-      loadCalendars();
+      checkTokenAndLoad();
     }
   }, [isOpen, scheduleForDecision]);
 
   // Load events whenever calendar or time filter changes
   useEffect(() => {
-    if (isOpen && selectedCalendarId) {
+    if (isOpen && selectedCalendarId && hasToken) {
       loadEvents();
     }
-  }, [isOpen, selectedCalendarId, timeFilter]);
+  }, [isOpen, selectedCalendarId, timeFilter, hasToken]);
 
-  const loadCalendars = async () => {
+  const checkTokenAndLoad = async () => {
     const token = await getAccessToken();
-    if (!token) return;
+    if (!token) {
+      setHasToken(false);
+      return;
+    }
+    setHasToken(true);
+    loadCalendars(token);
+  };
 
+  const loadCalendars = async (providedToken?: string) => {
+    const token = providedToken || await getAccessToken();
+    if (!token) {
+      setHasToken(false);
+      return;
+    }
+
+    setHasToken(true);
     setIsLoadingCalendars(true);
     setAuthError(null);
     try {
@@ -164,10 +179,14 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
     }
   };
 
-  const loadEvents = async () => {
-    const token = await getAccessToken();
-    if (!token) return;
+  const loadEvents = async (providedToken?: string) => {
+    const token = providedToken || await getAccessToken();
+    if (!token) {
+      setHasToken(false);
+      return;
+    }
 
+    setHasToken(true);
     setIsLoadingEvents(true);
     setAuthError(null);
     setSelectedEventIds(new Set());
@@ -215,9 +234,14 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
       const res = await googleSignIn();
       if (res?.user) {
         onUserAuthChange(res.user);
+        setHasToken(true);
         setIsLoadingCalendars(true);
         const calList = await listGoogleCalendars(res.accessToken);
         setCalendars(calList);
+        if (calList.length > 0) {
+          const primary = calList.find(c => c.primary) || calList[0];
+          setSelectedCalendarId(primary.id);
+        }
         const evList = await listGoogleCalendarEvents(res.accessToken, 'primary');
         setEvents(evList);
       }
@@ -563,7 +587,7 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
 
           {/* Account Status / Login */}
           <div className="flex items-center space-x-3">
-            {user ? (
+            {user && hasToken ? (
               <div className="flex items-center space-x-2">
                 <span className="text-[12px] text-zinc-400 hidden sm:inline">
                   Connected as <span className="font-semibold text-zinc-200">{user.email || user.displayName}</span>
@@ -587,7 +611,7 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
                   <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
                   <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
                 </svg>
-                <span>Sign in with Google</span>
+                <span>{user ? 'Authorize Calendar' : 'Sign in with Google'}</span>
               </button>
             )}
           </div>
@@ -604,13 +628,15 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           
-          {!user ? (
+          {!user || !hasToken ? (
             <div className="py-12 text-center space-y-4 max-w-md mx-auto">
               <div className="w-14 h-14 rounded-2xl bg-blue-950/30 border border-blue-800/50 mx-auto flex items-center justify-center">
                 <CalendarIcon className="w-7 h-7 text-blue-400" />
               </div>
               <div>
-                <h3 className="text-[16px] font-bold text-white">Connect Google Calendar</h3>
+                <h3 className="text-[16px] font-bold text-white">
+                  {user ? 'Authorize Google Calendar' : 'Connect Google Calendar'}
+                </h3>
                 <p className="text-[13px] text-zinc-400 mt-1">
                   Authenticate with your Google account to view scheduled meetings, import meeting transcripts as context, and schedule architecture reviews.
                 </p>
@@ -625,7 +651,7 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
                   <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
                   <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
                 </svg>
-                <span>Sign in with Google</span>
+                <span>{user ? 'Authorize Google Calendar' : 'Sign in with Google'}</span>
               </button>
             </div>
           ) : activeTab === 'events' ? (
